@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Suno Old Explorer — V4 / V4.5</title>
+<style>
+:root{color-scheme:dark}
+body{font-family:system-ui,-apple-system,Segoe UI,sans-serif;background:#111;color:#eee;margin:0;padding:24px}
+main{max-width:680px;margin:auto}
+h1{font-size:28px;margin:0 0 6px}
+p{color:#aaa}
+.card{background:#1b1b1b;border:1px solid #333;border-radius:18px;padding:20px;margin-top:18px}
+button,select{font:inherit;border-radius:12px;border:1px solid #555;background:#252525;color:#fff;padding:12px 16px}
+button{cursor:pointer}
+button.primary{width:100%;font-size:20px;margin:12px 0}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.row>*{flex:1}
+.meta{margin-top:18px;line-height:1.55}
+.small{font-size:13px;color:#888}
+a{color:#8ec5ff}
+.status{min-height:24px;color:#bbb}
+.badge{display:inline-block;padding:4px 9px;border-radius:999px;background:#333;margin-right:6px}
+.title{font-size:23px;font-weight:700;margin-top:8px}
+.user{color:#aaa}
+</style>
+</head>
+<body>
+<main>
+<h1>🎲 Suno Old Explorer</h1>
+<p>Losowe publiczne utwory z epoki V4 / V4.5 — niezależnie od obecnego Explore.</p>
+
+<div class="card">
+  <div class="row">
+    <select id="model">
+      <option value="both">V4 + V4.5</option>
+      <option value="v4">Tylko V4</option>
+      <option value="v4.5">Tylko V4.5</option>
+    </select>
+    <select id="tries">
+      <option value="8">8 prób</option>
+      <option value="15" selected>15 prób</option>
+      <option value="25">25 prób</option>
+    </select>
+  </div>
+  <button class="primary" id="random">🎲 LOSUJ UTWÓR</button>
+  <div class="status" id="status">Gotowe.</div>
+</div>
+
+<div class="card" id="result" hidden>
+  <div>
+    <span class="badge" id="version"></span>
+    <span class="badge" id="date"></span>
+  </div>
+  <div class="title" id="title"></div>
+  <div class="user" id="user"></div>
+  <div class="meta" id="tags"></div>
+  <p class="small">ID: <span id="id"></span></p>
+  <div class="row">
+    <a id="suno" target="_blank" rel="noopener"><button>Otwórz w Suno ↗</button></a>
+    <a id="audio" target="_blank" rel="noopener"><button>▶ Audio</button></a>
+  </div>
+</div>
+
+<div class="card small">
+<strong>Konfiguracja:</strong> w pliku HTML ustaw <code>WORKER_URL</code> na adres wdrożonego Cloudflare Workera.
+</div>
+</main>
+
+<script>
+const WORKER_URL = "WKLEJ_TUTAJ_ADRES_WORKERA";
+
+const $ = id => document.getElementById(id);
+
+async function randomSong(){
+  if(WORKER_URL.includes("WKLEJ_TUTAJ")){
+    $("status").textContent = "Najpierw wpisz adres Workera w WORKER_URL.";
+    return;
+  }
+  $("random").disabled=true;
+  $("result").hidden=true;
+  $("status").textContent="Szukam losowego publicznego V4/V4.5…";
+  try{
+    const model=$("model").value, tries=$("tries").value;
+    const r=await fetch(`${WORKER_URL.replace(/\/$/,"")}/random?model=${encodeURIComponent(model)}&tries=${tries}`);
+    const d=await r.json();
+    if(!r.ok || !d.ok) throw new Error(d.error||"Brak wyniku");
+    $("version").textContent=d.model_version||"unknown";
+    $("date").textContent=(d.created_at||"").slice(0,10);
+    $("title").textContent=d.title||"(bez tytułu)";
+    $("user").textContent=d.handle ? "@"+d.handle : (d.display_name||"Publiczny użytkownik");
+    $("tags").textContent=d.tags||"";
+    $("id").textContent=d.id;
+    $("suno").href=`https://suno.com/song/${d.id}`;
+    $("audio").href=d.audio_url||"#";
+    $("result").hidden=false;
+    $("status").textContent="Znaleziono.";
+  }catch(e){
+    $("status").textContent="Błąd: "+e.message;
+  }finally{
+    $("random").disabled=false;
+  }
+}
+$("random").onclick=randomSong;
+</script>
+</body>
+</html>
