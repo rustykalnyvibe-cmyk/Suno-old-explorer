@@ -63,17 +63,17 @@ a{color:#8ec5ff}
 </div>
 
 <div class="card small">
-<strong>Konfiguracja:</strong> w pliku HTML ustaw <code>WORKER_URL</code> na adres wdrożonego Cloudflare Workera.
+<strong>Konfiguracja:</strong> Worker podłączony: <code>https://suno-old-explorer.rustykalnyvibe.workers.dev</code>[span_3](start_span)[span_3](end_span).
 </div>
 </main>
 
 <script>
-const WORKER_URL = "WKLEJ_TUTAJ_ADRES_WORKERA";
+const WORKER_URL = "https://suno-old-explorer.rustykalnyvibe.workers.dev";
 
 const $ = id => document.getElementById(id);
 
 async function randomSong(){
-  if(WORKER_URL.includes("suno-old-explorer.rustykalnyvibe.workers.dev")){
+  if(!WORKER_URL || WORKER_URL.includes("WKLEJ_TUTAJ_ADRES_WORKERA")){
     $("status").textContent = "Najpierw wpisz adres Workera w WORKER_URL.";
     return;
   }
@@ -82,8 +82,15 @@ async function randomSong(){
   $("status").textContent="Szukam losowego publicznego V4/V4.5…";
   try{
     const model=$("model").value, tries=$("tries").value;
-    const r=await fetch(`${WORKER_URL.replace(/\/$/,"")}/random?model=${encodeURIComponent(model)}&tries=${tries}`);
-    const d=await r.json();
+    const baseUrl = WORKER_URL.replace(/\/$/,"");
+    const r = await fetch(`${baseUrl}/random?model=${encodeURIComponent(model)}&tries=${tries}`);
+    const text = await r.text();
+    let d;
+    try{
+      d = JSON.parse(text);
+    }catch{
+      throw new Error(`Worker nie zwrócił JSON (HTTP ${r.status}): ${text.slice(0,80)}`);
+    }
     if(!r.ok || !d.ok) throw new Error(d.error||"Brak wyniku");
     $("version").textContent=d.model_version||"unknown";
     $("date").textContent=(d.created_at||"").slice(0,10);
