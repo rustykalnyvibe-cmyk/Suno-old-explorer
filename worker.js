@@ -1,5 +1,5 @@
 const SUNO_API = "https://studio-api-prod.suno.com/api/playlist/";
-const VERSION = "explorer-8.1";
+const VERSION = "explorer-8.2";
 const MAX_PAGE = 50;
 
 function json(data, status = 200) {
@@ -30,7 +30,9 @@ function extract(item) {
   const c = getClip(item);
   const md = c.metadata || {};
   const media = Array.isArray(c.media_urls) ? c.media_urls : [];
-  const audio = media.find(x => /audio|m4a|mp3|opus/i.test(String(x?.content_type || x?.url || ""))) || media[0] || {};
+  const audio = media.find(x => /^https?:\/\//i.test(String(x?.url || "")) && !/\/api\/forbidden(?:\?|$)/i.test(String(x.url)) && /audio|m4a|mp3|opus/i.test(String(x?.content_type || x?.url || "")))
+    || media.find(x => /^https?:\/\//i.test(String(x?.url || "")) && !/\/api\/forbidden(?:\?|$)/i.test(String(x.url)))
+    || {};
   const creator = c.user || c.creator || c.owner || {};
 
   return {
@@ -48,7 +50,7 @@ function extract(item) {
     history: first(md.history, c.history, null),
     created_at: first(c.created_at, ""),
     duration: first(md.duration, c.duration, null),
-    audio_url: first(audio.url, c.audio_url && !/\/api\/forbidden(?:\?|$)/i.test(c.audio_url) ? c.audio_url : "", ""),
+    audio_url: first(audio.url, c.audio_url && /^https?:\/\//i.test(c.audio_url) && !/\/api\/forbidden(?:\?|$)/i.test(c.audio_url) ? c.audio_url : "", ""),
     image_url: first(c.image_url, ""),
     handle: first(c.handle, creator.handle, ""),
     display_name: first(c.display_name, creator.display_name, creator.name, ""),
@@ -68,7 +70,7 @@ export default {
         ok: true,
         version: VERSION,
         source: "Public Suno playlist API",
-        message: "Explorer 8 działa. Wklej adres publicznej playlisty Suno."
+        message: "Explorer 8.2 działa. Wklej adres publicznej playlisty Suno."
       });
     }
 
