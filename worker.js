@@ -2,10 +2,16 @@
 const DATASET = "https://huggingface.co/datasets/sleeping-ai/Suno-Public-Playlist-small-audio/resolve/main/suno_music.txt?download=true";
 
 const EXP = [
-  "experimental", "turntablism", "avant-garde", "avant garde",
-  "abstract", "weird", "crazy", "mystic", "psychedelic",
-  "surreal", "unconventional", "glitch", "idm", "leftfield",
-  "hybrid", "chaotic", "freestyle", "experimental electronic"
+  "experimental", "experimental electronic", "experimental hip hop",
+  "abstract", "abstract hip hop", "turntablism", "avant-garde",
+  "avant garde", "leftfield", "left field", "idm", "glitch",
+  "glitchcore", "psychedelic", "surreal", "unconventional",
+  "unorthodox", "weird", "chaotic", "noise", "breakcore",
+  "industrial", "deconstructed", "microtonal", "atonal",
+  "improvisational", "freeform", "freestyle", "sound collage",
+  "sound design", "field recording", "dissonant", "wonky",
+  "genre bending", "genre-bending", "off-kilter", "hybrid",
+  "mystic", "crazy"
 ];
 
 const API = "https://studio-api.prod.suno.com/api/clip/";
@@ -50,21 +56,46 @@ function first(...values) {
   return null;
 }
 
+function textValue(value) {
+  if (typeof value === "string") return value;
+  if (typeof value === "number") return String(value);
+
+  if (Array.isArray(value)) {
+    return value.map(textValue).filter(Boolean).join(", ");
+  }
+
+  return "";
+}
+
+function hasTerm(text, term) {
+  const haystack = " " + norm(text) + " ";
+  const needle = " " + norm(term) + " ";
+
+  return haystack.includes(needle);
+}
+
 function modelLabel(d) {
   const md = d?.metadata || {};
+  const clip = d?.clip || {};
 
   return String(first(
     d?.major_model_version,
     d?.model_version,
     md.major_model_version,
-    md.model_version
+    md.model_version,
+    clip.major_model_version,
+    clip.model_version
   ) || "");
 }
 
 function ver(value, wanted) {
-  const x = norm(value);
+  let x = norm(value);
 
   if (!x) return false;
+
+  if (!x.startsWith("v") && /^[0-9]/.test(x)) {
+    x = "v" + x;
+  }
 
   if (wanted === "v3") {
     return x === "v3" || x === "v3-all";
@@ -95,7 +126,7 @@ function ver(value, wanted) {
 
 function expscore(text) {
   return EXP.reduce(
-    (n, term) => n + (text.includes(norm(term)) ? 1 : 0),
+    (n, term) => n + (hasTerm(text, term) ? 1 : 0),
     0
   );
 }
@@ -106,10 +137,30 @@ function extract(d, id) {
   const voice = first(d?.voice, md.voice) || {};
 
   const tags = [
-    first(md.tags),
-    first(d.display_tags),
-    first(d.tags)
-  ].filter(Boolean).join(", ");
+    d.tags,
+    md.tags,
+    d.display_tags,
+    md.display_tags,
+    d.style,
+    md.style
+  ]
+    .map(textValue)
+    .filter(Boolean)
+    .join(", ");
+
+  const description = textValue(first(
+    d.gpt_description_prompt,
+    md.gpt_description_prompt,
+    d.description,
+    md.description,
+    d.prompt,
+    md.prompt
+  ));
+
+  const negativeTags = textValue(first(
+    d.negative_tags,
+    md.negative_tags
+  ));
 
   return {
     id: d?.id || id,
@@ -122,7 +173,9 @@ function extract(d, id) {
     display_name: d.display_name || "",
 
     tags,
-    display_tags: d.display_tags || "",
+    display_tags: textValue(first(d.display_tags, md.display_tags)),
+    description,
+    negative_tags: negativeTags,
 
     created_at: d.created_at || "",
     audio_url: first(d.audio_url, md.audio_url) || "",
@@ -130,10 +183,10 @@ function extract(d, id) {
     has_vocal: first(d.has_vocal, md.has_vocal),
 
     can_remix: first(d.can_remix, md.can_remix),
-    can_download_remix: d.can_download_remix ?? null,
+    can_download_remix: first(d.can_download_remix, md.can_download_remix),
     is_remix: first(d.is_remix, md.is_remix),
 
-    is_public: d.is_public ?? null,
+    is_public: first(d.is_public, md.is_public),
 
     clip_type: first(md.type, d.type),
     source_type: first(
@@ -183,6 +236,7 @@ function searchable(d) {
   return norm([
     d.tags,
     d.display_tags,
+    d.description,
     d.title,
     d.model_name
   ].filter(Boolean).join(" "));
@@ -191,22 +245,19 @@ function searchable(d) {
 function score(d, styleTerms, excluded, matchMode, experimentalMode) {
   const h = searchable(d);
 
-  if (excluded.some(term => h.includes(term))) {
+  if (excluded.some(term => hasTerm(h, term))) {
     return null;
   }
 
-  const hits = styleTerms.filter(term => h.includes(term)).length;
+  const hits = styleTerms.filter(term => hasTerm(h, term)).length;
 
-  // Pierwszy wpisany termin jest głównym filtrem.
-  if (styleTerms.length && !h.includes(styleTerms[0])) {
+  // Tryb ALL: wszystkie wpisane terminy muszą wystąpić.
+  if (styleTerms.length && matchMode === "all" && hits !== styleTerms.length) {
     return null;
   }
 
-  if (styleTerms.length && matchMode === "all" && hits < styleTerms.length) {
-    return null;
-  }
-
-  if (styleTerms.length && matchMode === "any" && hits < 1) {
+  // Tryb ANY: wystarczy jeden z wpisanych terminów.
+  if (styleTerms.length && matchMode === "any" && hits === 0) {
     return null;
   }
 
@@ -218,7 +269,7 @@ function score(d, styleTerms, excluded, matchMode, experimentalMode) {
 
   let matchScore = hits * 100 + experimentalHits * 10;
 
-  if (styleTerms.length && h.includes(styleTerms[0])) {
+  if (styleTerms.length && hasTerm(h, styleTerms[0])) {
     matchScore += 30;
   }
 
@@ -340,7 +391,7 @@ export default {
     if (url.pathname === "/health") {
       return cors({
         ok: true,
-        version: "explorer-3",
+        version: "explorer-4",
         message: "Worker działa."
       });
     }
