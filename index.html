@@ -66,7 +66,7 @@ hr{border:0;border-top:1px solid #363a44;margin:16px 0}
     <h1>🎧 Suno Old Explorer</h1>
     <p style="margin:5px 0 0">Archiwum publicznych playlist i separacja generacji modeli Suno.</p>
   </div>
-  <div class="version">EXPLORER 8.2 · WERSJA TESTOWA</div>
+  <div class="version">EXPLORER 8.3 · WERSJA TESTOWA</div>
 </header>
 
 <section class="card">
@@ -88,7 +88,7 @@ hr{border:0;border-top:1px solid #363a44;margin:16px 0}
     </div>
   </div>
   <div class="status" id="status">Gotowe. Wklej adres publicznej playlisty.</div>
-  <div class="muted">Źródło: publiczny endpoint playlist Suno. Nie wymaga cookies ani tokenu.</div>
+  <div class="muted">Źródło: publiczny endpoint playlist Suno. Audio jest pobierane przez Worker; nie wymaga cookies ani tokenu.</div>
 </section>
 
 <section class="card hidden" id="summary">
@@ -137,7 +137,7 @@ hr{border:0;border-top:1px solid #363a44;margin:16px 0}
 </section>
 
 <section class="card">
-  <b>Reguły archiwum — Explorer 8.2</b>
+  <b>Reguły archiwum — Explorer 8.3</b>
   <p class="muted">Oddzielne kategorie: v3, v3.5, v4, v4.5, v4.5+, warianty Pro rozpoznane jawnie oraz v5. Rekordy bez major_model_version są odseparowane jako nieustalone. Wersje v6 i nowsze są odrzucane. Nie zgadujemy oznaczeń Pro na podstawie samej nazwy technicznej modelu.</p>
   <p class="muted">Informacje o coverach i pochodzeniu pokazujemy tylko wtedy, gdy API faktycznie je zwraca. Puste pole nie oznacza, że utwór na pewno nie jest coverem.</p>
   <a id="health" href="#" target="_blank" rel="noopener">Sprawdź status Workera</a>
@@ -268,12 +268,12 @@ function playIndex(index){
   if(!song.audio_url){$("playerStatus").textContent="Ten utwór nie ma adresu audio.";return;}
   currentIndex=index;currentSongId=song.id||"";
   const player=$("mainPlayer");
-  player.src=song.audio_url;
+  player.src=`${W}/audio?src=${encodeURIComponent(song.audio_url)}`;
   $("nowPlaying").textContent=`${song.title} — ${song._version.label}`;
-  $("playerStatus").textContent="Ładowanie audio… Jeśli odtwarzanie nie ruszy, sprawdzimy odpowiedź serwera audio.";
+  $("playerStatus").textContent="Pobieranie audio przez Worker…";
   renderQueue();
   const promise=player.play();
-  if(promise&&promise.catch)promise.catch(err=>{$("playerStatus").textContent=`Nie udało się odtworzyć: ${err.message||err}. Możliwe, że CDN Suno blokuje odtwarzanie poza Suno.`;});
+  if(promise&&promise.catch)promise.catch(err=>{$("playerStatus").textContent=`Nie udało się uruchomić audio: ${err.message||err}. Sprawdźmy dostępność pliku przez proxy.`;});
 }
 function stepTrack(delta){
   if(!currentQueue.length)return;
@@ -283,7 +283,8 @@ function stepTrack(delta){
   playIndex(next);
 }
 $("mainPlayer").addEventListener("ended",()=>stepTrack(1));
-$("mainPlayer").addEventListener("error",()=>{$("playerStatus").textContent="Błąd pliku audio. Sprawdź dostępność adresu CDN Suno lub ograniczenia odtwarzania zewnętrznego.";});
+$("mainPlayer").addEventListener("error",()=>{$("playerStatus").textContent="Błąd pliku audio przez proxy. Możliwe, że plik jest niedostępny albo Suno odrzuca żądanie.";});
+$("mainPlayer").addEventListener("canplay",()=>{$("playerStatus").textContent="Audio gotowe do odtwarzania.";});
 $("prevTrack").addEventListener("click",()=>stepTrack(-1));
 $("nextTrack").addEventListener("click",()=>stepTrack(1));
 $("playQueue").addEventListener("click",()=>playIndex(currentIndex>=0?currentIndex:0));
@@ -330,7 +331,7 @@ $("load").addEventListener("click",async()=>{
     $("summary").classList.remove("hidden");
     $("playlistTitle").textContent=title||"Wyniki playlisty";
     $("playlistMeta").textContent=`ID: ${id} · pobrano ${pages} stron · ${allSongs.length+(counts.excluded||0)} rekordów`;
-    $("versionNote").textContent="EXPLORER 8.2 · odtwarzacz i kolejka";
+    $("versionNote").textContent="EXPLORER 8.3 · proxy audio i kolejka";
     renderStats();setVersion("all");
     $("status").textContent=`Gotowe. Odczytano ${allSongs.length+(counts.excluded||0)} rekordów; ${counts.unknown||0} bez potwierdzonej wersji pozostawiono w osobnej kategorii. v6+ wykluczono.`;
   }catch(err){$("status").textContent="Błąd: "+err.message;}

@@ -1,5 +1,5 @@
 const SUNO_API = "https://studio-api-prod.suno.com/api/playlist/";
-const VERSION = "explorer-8.2";
+const VERSION = "explorer-8.3";
 const MAX_PAGE = 50;
 
 function json(data, status = 200) {
@@ -69,9 +69,60 @@ export default {
       return json({
         ok: true,
         version: VERSION,
-        source: "Public Suno playlist API",
-        message: "Explorer 8.2 działa. Wklej adres publicznej playlisty Suno."
+        source: "Public Suno playlist API + audio proxy",
+        message: "Explorer 8.3 działa. Audio jest przekazywane przez Worker."
       });
+    }
+
+    if (url.pathname === "/audio") {
+      const source = url.searchParams.get("src");
+      if (!source) return json({ ok: false, error: "Brak adresu źródłowego audio." }, 400);
+
+      let audioUrl;
+      try { audioUrl = new URL(source); } catch { return json({ ok: false, error: "Nieprawidłowy adres audio." }, 400); }
+      const host = audioUrl.hostname.toLowerCase();
+      const allowedHost = host === "suno.ai" || host.endsWith(".suno.ai") ||
+        host === "suno.com" || host.endsWith(".suno.com") ||
+        host === "cloudfront.net" || host.endsWith(".cloudfront.net");
+      if (audioUrl.protocol !== "https:" || !allowedHost) {
+        return json({ ok: false, error: "Niedozwolony host pliku audio." }, 400);
+      }
+
+      try {
+        const upstreamHeaders = new Headers({ "accept": "audio/*,*/*;q=0.8" });
+        const range = request.headers.get("range");
+        if (range) upstreamHeaders.set("range", range);
+        const upstream = await fetch(audioUrl.toString(), {
+          method: "GET",
+          headers: upstreamHeaders,
+          redirect: "follow"
+        });
+        const headers = new Headers({
+          "access-control-allow-origin": "*",
+          "access-control-allow-methods": "GET,HEAD,OPTIONS",
+          "access-control-allow-headers": "Range,Content-Type",
+          "access-control-expose-headers": "Accept-Ranges,Content-Length,Content-Range,Content-Type",
+          "cache-control": "public, max-age=1800",
+          "accept-ranges": upstream.headers.get("accept-ranges") || "bytes"
+        });
+        const upstreamType = upstream.headers.get("content-type") || "";
+        const path = audioUrl.pathname.toLowerCase();
+        let contentType = upstreamType;
+        if (!contentType || contentType.includes("application/octet-stream")) {
+          if (path.endsWith(".m4a") || path.endsWith(".mp4")) contentType = "audio/mp4";
+          else if (path.endsWith(".mp3")) contentType = "audio/mpeg";
+          else if (path.endsWith(".ogg")) contentType = "audio/ogg";
+          else if (path.endsWith(".wav")) contentType = "audio/wav";
+        }
+        if (contentType) headers.set("content-type", contentType);
+        for (const name of ["content-length", "content-range", "last-modified", "etag"]) {
+          const value = upstream.headers.get(name);
+          if (value) headers.set(name, value);
+        }
+        return new Response(upstream.body, { status: upstream.status, statusText: upstream.statusText, headers });
+      } catch (error) {
+        return json({ ok: false, error: `Błąd pobierania audio z Suno: ${String(error?.message || error)}` }, 502);
+      }
     }
 
     if (url.pathname !== "/playlist") {
