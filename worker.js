@@ -8,9 +8,11 @@ const EXP = [
   "hybrid", "chaotic", "freestyle", "experimental electronic"
 ];
 
-function cors(b, s = 200) {
-  return new Response(JSON.stringify(b), {
-    status: s,
+const API = "https://studio-api.prod.suno.com/api/clip/";
+
+function cors(body, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
     headers: {
       "content-type": "application/json; charset=utf-8",
       "access-control-allow-origin": "*",
@@ -22,7 +24,7 @@ function cors(b, s = 200) {
 }
 
 function norm(s) {
-  return String(s || "")
+  return String(s ?? "")
     .toLowerCase()
     .normalize("NFKD")
     .replace(/[\u0300-\u036f]/g, "")
@@ -39,10 +41,10 @@ function terms(s) {
     .slice(0, 8);
 }
 
-function first(o, keys) {
-  for (const k of keys) {
-    if (o && o[k] !== undefined && o[k] !== null && o[k] !== "") {
-      return o[k];
+function first(...values) {
+  for (const value of values) {
+    if (value !== undefined && value !== null && value !== "") {
+      return value;
     }
   }
   return null;
@@ -51,19 +53,16 @@ function first(o, keys) {
 function modelLabel(d) {
   const md = d?.metadata || {};
 
-  return String(
-    first(d, ["major_model_version", "model_version"]) ||
-    first(md, ["major_model_version", "model_version"]) ||
-    ""
-  );
+  return String(first(
+    d?.major_model_version,
+    d?.model_version,
+    md.major_model_version,
+    md.model_version
+  ) || "");
 }
 
-/*
-Nie przypisujemy modelu na podstawie samego "chirp".
-Nieznana wartość pozostaje nieznana.
-*/
-function ver(v, wanted) {
-  const x = norm(v);
+function ver(value, wanted) {
+  const x = norm(value);
 
   if (!x) return false;
 
@@ -94,69 +93,87 @@ function ver(v, wanted) {
   return false;
 }
 
-function expscore(h) {
+function expscore(text) {
   return EXP.reduce(
-    (n, t) => n + (h.includes(norm(t)) ? 1 : 0),
+    (n, term) => n + (text.includes(norm(term)) ? 1 : 0),
     0
   );
 }
 
 function extract(d, id) {
   const md = d?.metadata || {};
-  const persona = first(d, ["persona"]) || first(md, ["persona"]) || {};
-  const voice = first(d, ["voice"]) || first(md, ["voice"]) || {};
+  const persona = first(d?.persona, md.persona) || {};
+  const voice = first(d?.voice, md.voice) || {};
 
   const tags = [
-    first(md, ["tags"]),
-    first(d, ["display_tags"]),
-    first(d, ["tags"])
+    first(md.tags),
+    first(d.display_tags),
+    first(d.tags)
   ].filter(Boolean).join(", ");
 
   return {
     id: d?.id || id,
 
     model_version: modelLabel(d),
-    model_name: first(d, ["model_name"]) || first(md, ["model_name"]) || "",
+    model_name: first(d.model_name, md.model_name) || "",
 
-    title: first(d, ["title"]) || first(md, ["title"]) || "",
-    handle: first(d, ["handle"]) || "",
-    display_name: first(d, ["display_name"]) || "",
+    title: first(d.title, md.title) || "",
+    handle: d.handle || "",
+    display_name: d.display_name || "",
 
     tags,
-    display_tags: first(d, ["display_tags"]) || "",
+    display_tags: d.display_tags || "",
 
-    created_at: first(d, ["created_at"]) || "",
-    audio_url: first(d, ["audio_url"]) || "",
+    created_at: d.created_at || "",
+    audio_url: first(d.audio_url, md.audio_url) || "",
 
-    has_vocal: first(d, ["has_vocal"]) ?? first(md, ["has_vocal"]),
+    has_vocal: first(d.has_vocal, md.has_vocal),
 
-    can_remix: first(d, ["can_remix"]) ?? first(md, ["can_remix"]),
-    can_download_remix: first(d, ["can_download_remix"]),
-    is_remix: first(d, ["is_remix"]) ?? first(md, ["is_remix"]),
-    is_public: first(d, ["is_public"]),
+    can_remix: first(d.can_remix, md.can_remix),
+    can_download_remix: d.can_download_remix ?? null,
+    is_remix: first(d.is_remix, md.is_remix),
 
-    clip_type: first(md, ["type"]) ?? first(d, ["type"]),
-    source_type: first(d, ["source_type", "clip_type", "type"]) ??
-      first(md, ["source_type", "clip_type", "type"]),
+    is_public: d.is_public ?? null,
 
-    voice_id: first(d, ["voice_id"]) ??
-      first(md, ["voice_id"]) ??
-      first(voice, ["id", "voice_id"]),
+    clip_type: first(md.type, d.type),
+    source_type: first(
+      d.source_type,
+      d.clip_type,
+      d.type,
+      md.source_type,
+      md.clip_type,
+      md.type
+    ),
 
-    voice_name: first(d, ["voice_name"]) ??
-      first(md, ["voice_name"]) ??
-      first(voice, ["name", "voice_name"]),
+    voice_id: first(
+      d.voice_id,
+      md.voice_id,
+      voice.id,
+      voice.voice_id
+    ),
 
-    persona_id: first(d, ["persona_id"]) ??
-      first(md, ["persona_id"]) ??
-      first(persona, ["id", "persona_id"]),
+    voice_name: first(
+      d.voice_name,
+      md.voice_name,
+      voice.name,
+      voice.voice_name
+    ),
 
-    persona_name: first(d, ["persona_name"]) ??
-      first(md, ["persona_name"]) ??
-      first(persona, ["name", "persona_name"]),
+    persona_id: first(
+      d.persona_id,
+      md.persona_id,
+      persona.id,
+      persona.persona_id
+    ),
 
-    source_clips: first(d, ["source_clips"]) ??
-      first(md, ["source_clips"]),
+    persona_name: first(
+      d.persona_name,
+      md.persona_name,
+      persona.name,
+      persona.persona_name
+    ),
+
+    source_clips: first(d.source_clips, md.source_clips),
 
     raw_api: d
   };
@@ -171,30 +188,48 @@ function searchable(d) {
   ].filter(Boolean).join(" "));
 }
 
-function score(d, st, ex, mode, em) {
+function score(d, styleTerms, excluded, matchMode, experimentalMode) {
   const h = searchable(d);
 
-  if (ex.some(x => h.includes(x))) return null;
+  if (excluded.some(term => h.includes(term))) {
+    return null;
+  }
 
-  const hits = st.filter(x => h.includes(x)).length;
+  const hits = styleTerms.filter(term => h.includes(term)).length;
 
-  if (st.length && !h.includes(st[0])) return null;
-  if (st.length && mode === "all" && hits < st.length) return null;
-  if (st.length && mode === "any" && hits < 1) return null;
+  // Pierwszy wpisany termin jest głównym filtrem.
+  if (styleTerms.length && !h.includes(styleTerms[0])) {
+    return null;
+  }
 
-  const e = expscore(h);
+  if (styleTerms.length && matchMode === "all" && hits < styleTerms.length) {
+    return null;
+  }
 
-  if (em === "only" && !e) return null;
+  if (styleTerms.length && matchMode === "any" && hits < 1) {
+    return null;
+  }
 
-  let s = hits * 100 + e * 10;
+  const experimentalHits = expscore(h);
 
-  if (st.length && h.includes(st[0])) s += 30;
-  if (em === "boost") s += e * 25;
+  if (experimentalMode === "only" && experimentalHits === 0) {
+    return null;
+  }
+
+  let matchScore = hits * 100 + experimentalHits * 10;
+
+  if (styleTerms.length && h.includes(styleTerms[0])) {
+    matchScore += 30;
+  }
+
+  if (experimentalMode === "boost") {
+    matchScore += experimentalHits * 25;
+  }
 
   return {
     ...d,
-    match_score: s,
-    experimental_hits: e
+    match_score: matchScore,
+    experimental_hits: experimentalHits
   };
 }
 
@@ -202,89 +237,137 @@ async function ids() {
   const key = new Request("https://cache.local/suno-ids");
 
   const cached = await caches.default.match(key);
-  if (cached) return cached.json();
 
-  const r = await fetch(DATASET, {
+  if (cached) {
+    return cached.json();
+  }
+
+  const response = await fetch(DATASET, {
     cf: { cacheTtl: 86400 }
   });
 
-  if (!r.ok) throw Error("Nie można pobrać listy ID.");
+  if (!response.ok) {
+    throw Error("Nie można pobrać listy ID.");
+  }
 
-  const body = await r.text();
+  const body = await response.text();
 
-  const a = [...new Set(
-    [...body.matchAll(/https:\/\/cdn1\.suno\.ai\/([0-9a-f-]{36})\.mp3/gi)]
-      .map(m => m[1])
-  )];
+  const found = [
+    ...body.matchAll(
+      /https:\/\/cdn1\.suno\.ai\/([0-9a-f-]{36})\.mp3/gi
+    )
+  ].map(match => match[1]);
 
-  if (!a.length) throw Error("Lista ID jest pusta.");
+  const unique = [...new Set(found)];
+
+  if (!unique.length) {
+    throw Error("Lista ID jest pusta albo zmienił się format datasetu.");
+  }
 
   await caches.default.put(
     key,
-    new Response(JSON.stringify(a), {
+    new Response(JSON.stringify(unique), {
       headers: { "content-type": "application/json" }
     })
   );
 
-  return a;
+  return unique;
 }
 
 async function clip(id) {
-  const r = await fetch(
-    "https://studio-api.prod.suno.com/api/clip/" + id,
-    {
-      headers: { "user-agent": "Mozilla/5.0" },
-      cf: { cacheTtl: 3600, cacheEverything: true }
-    }
-  );
-
-  if (!r.ok) return { ok: false, reason: "http_" + r.status };
-
-  let d;
-
   try {
-    d = await r.json();
-  } catch {
-    return { ok: false, reason: "invalid_json" };
+    const response = await fetch(API + id, {
+      headers: {
+        "user-agent": "Mozilla/5.0"
+      },
+      cf: {
+        cacheTtl: 3600,
+        cacheEverything: true
+      }
+    });
+
+    if (!response.ok) {
+      return {
+        ok: false,
+        reason: "http_" + response.status
+      };
+    }
+
+    const data = await response.json();
+
+    if (data.status !== "complete") {
+      return {
+        ok: false,
+        reason: "not_complete"
+      };
+    }
+
+    return {
+      ok: true,
+      data: extract(data, id)
+    };
+
+  } catch (error) {
+    return {
+      ok: false,
+      reason: "fetch_error",
+      message: String(error.message || error)
+    };
+  }
+}
+
+function sampleIds(all, count) {
+  const pool = [...all];
+  const selected = [];
+
+  while (selected.length < Math.min(count, pool.length)) {
+    const index = Math.floor(Math.random() * pool.length);
+    selected.push(pool[index]);
+    pool.splice(index, 1);
   }
 
-  if (d.status !== "complete") {
-    return { ok: false, reason: "not_complete" };
-  }
-
-  return {
-    ok: true,
-    data: extract(d, id)
-  };
+  return selected;
 }
 
 export default {
-  async fetch(req) {
-    if (req.method === "OPTIONS") return cors({}, 204);
-
-    const u = new URL(req.url);
-
-    if (u.pathname === "/health") {
-      return cors({ ok: true, version: "diagnostic-2" });
+  async fetch(request) {
+    if (request.method === "OPTIONS") {
+      return cors({}, 204);
     }
 
-    if (u.pathname === "/debug") {
-      const id = u.searchParams.get("id");
+    const url = new URL(request.url);
+
+    if (url.pathname === "/health") {
+      return cors({
+        ok: true,
+        version: "explorer-3",
+        message: "Worker działa."
+      });
+    }
+
+    if (url.pathname === "/debug") {
+      const id = url.searchParams.get("id");
 
       if (!id || !/^[0-9a-f-]{36}$/i.test(id)) {
-        return cors({ ok: false, error: "Podaj prawidłowe ID UUID." }, 400);
+        return cors({
+          ok: false,
+          error: "Podaj prawidłowe ID UUID."
+        }, 400);
       }
 
       try {
-        const r = await fetch(
-          "https://studio-api.prod.suno.com/api/clip/" + id,
-          {
-            headers: { "user-agent": "Mozilla/5.0" },
-            cf: { cacheTtl: 3600, cacheEverything: true }
+        const response = await fetch(API + id, {
+          headers: {
+            "user-agent": "Mozilla/5.0"
+          },
+          cf: {
+            cacheTtl: 3600,
+            cacheEverything: true
           }
-        );
+        });
 
-        const body = await r.text();
+        const body = await response.text();
+
         let api;
 
         try {
@@ -294,73 +377,84 @@ export default {
         }
 
         return cors({
-          ok: r.ok,
-          http_status: r.status,
+          ok: response.ok,
+          http_status: response.status,
           id,
           api
-        }, r.ok ? 200 : 502);
-      } catch (e) {
-        return cors({ ok: false, error: String(e.message || e) }, 500);
+        }, response.ok ? 200 : 502);
+
+      } catch (error) {
+        return cors({
+          ok: false,
+          error: String(error.message || error)
+        }, 500);
       }
     }
 
-    if (u.pathname === "/stats") {
+    if (url.pathname === "/stats") {
       try {
-        const a = await ids();
+        const all = await ids();
+
         return cors({
           ok: true,
-          dataset_ids: a.length,
+          dataset_ids: all.length,
           message: "Lista ID została pobrana."
         });
-      } catch (e) {
-        return cors({ ok: false, error: String(e.message || e) }, 500);
+
+      } catch (error) {
+        return cors({
+          ok: false,
+          error: String(error.message || error)
+        }, 500);
       }
     }
 
-    if (u.pathname !== "/random") {
-      return cors({ ok: false, error: "Not found" }, 404);
+    if (url.pathname !== "/random") {
+      return cors({
+        ok: false,
+        error: "Not found"
+      }, 404);
     }
 
     try {
-      const wanted = u.searchParams.get("model") || "both";
+      const wanted = url.searchParams.get("model") || "both";
 
-      const n = Math.min(
-        Math.max(+u.searchParams.get("tries") || 20, 1),
+      const count = Math.min(
+        Math.max(Number(url.searchParams.get("tries")) || 20, 1),
         20
       );
 
-      const st = terms(u.searchParams.get("style"));
-      const ex = terms(u.searchParams.get("exclude"));
+      const styleTerms = terms(url.searchParams.get("style"));
+      const excluded = terms(url.searchParams.get("exclude"));
 
-      const mode = u.searchParams.get("match") === "any" ? "any" : "all";
+      const matchMode =
+        url.searchParams.get("match") === "any" ? "any" : "all";
 
-      const em = ["normal", "boost", "only"].includes(
-        u.searchParams.get("experimental")
-      ) ? u.searchParams.get("experimental") : "normal";
+      const experimentalMode = [
+        "normal",
+        "boost",
+        "only"
+      ].includes(url.searchParams.get("experimental"))
+        ? url.searchParams.get("experimental")
+        : "normal";
 
-      const a = await ids();
+      const all = await ids();
+      const sample = sampleIds(all, count);
 
-      const sample = [];
-      const seen = new Set();
+      const matches = [];
 
-      while (sample.length < Math.min(n, a.length)) {
-        const id = a[Math.floor(Math.random() * a.length)];
-        if (!seen.has(id)) {
-          seen.add(id);
-          sample.push(id);
-        }
-      }
-
-      const m = [];
       const stats = {
         sampled: sample.length,
         complete: 0,
         incomplete: 0,
+        http_errors: 0,
+        fetch_errors: 0,
         model_missing: 0,
         model_mismatch: 0,
         matched: 0
       };
 
+      // Maksymalnie 5 równoległych zapytań do API Suno.
       for (let i = 0; i < sample.length; i += 5) {
         const batch = await Promise.all(
           sample.slice(i, i + 5).map(clip)
@@ -368,34 +462,47 @@ export default {
 
         for (const item of batch) {
           if (!item.ok) {
-            if (item.reason === "not_complete") stats.incomplete++;
+            if (item.reason === "not_complete") {
+              stats.incomplete++;
+            } else if (item.reason?.startsWith("http_")) {
+              stats.http_errors++;
+            } else {
+              stats.fetch_errors++;
+            }
+
             continue;
           }
 
           stats.complete++;
 
-          const d = item.data;
+          const data = item.data;
 
-          if (!d.model_version) {
+          if (!data.model_version) {
             stats.model_missing++;
             continue;
           }
 
-          if (!ver(d.model_version, wanted)) {
+          if (!ver(data.model_version, wanted)) {
             stats.model_mismatch++;
             continue;
           }
 
-          const x = score(d, st, ex, mode, em);
+          const result = score(
+            data,
+            styleTerms,
+            excluded,
+            matchMode,
+            experimentalMode
+          );
 
-          if (x) {
-            m.push(x);
+          if (result) {
+            matches.push(result);
             stats.matched++;
           }
         }
       }
 
-      if (!m.length) {
+      if (!matches.length) {
         return cors({
           ok: false,
           checked: sample.length,
@@ -404,18 +511,21 @@ export default {
         }, 404);
       }
 
-      m.sort((a, b) => b.match_score - a.match_score);
+      matches.sort(
+        (a, b) => b.match_score - a.match_score
+      );
 
       return cors({
         ok: true,
         checked: sample.length,
         stats,
-        results: m.slice(0, 10)
+        results: matches.slice(0, 10)
       });
-    } catch (e) {
+
+    } catch (error) {
       return cors({
         ok: false,
-        error: String(e.message || e)
+        error: String(error.message || error)
       }, 500);
     }
   }
