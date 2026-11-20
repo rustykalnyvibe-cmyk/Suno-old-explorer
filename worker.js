@@ -1,20 +1,18 @@
 
 const DATASET = "https://huggingface.co/datasets/sleeping-ai/Suno-Public-Playlist-small-audio/resolve/main/suno_music.txt?download=true";
 
-const EXP = [
-  "experimental", "experimental electronic", "experimental hip hop",
-  "abstract", "abstract hip hop", "turntablism", "avant-garde",
-  "avant garde", "leftfield", "left field", "idm", "glitch",
-  "glitchcore", "psychedelic", "surreal", "unconventional",
-  "unorthodox", "weird", "chaotic", "noise", "breakcore",
-  "industrial", "deconstructed", "microtonal", "atonal",
-  "improvisational", "freeform", "freestyle", "sound collage",
-  "sound design", "field recording", "dissonant", "wonky",
-  "genre bending", "genre-bending", "off-kilter", "hybrid",
-  "mystic", "crazy"
-];
-
 const API = "https://studio-api.prod.suno.com/api/clip/";
+
+const EXP = [
+  "experimental", "turntablism", "avant-garde", "avant garde",
+  "abstract", "weird", "crazy", "mystic", "psychedelic",
+  "surreal", "unconventional", "glitch", "idm", "leftfield",
+  "hybrid", "chaotic", "freestyle", "experimental electronic",
+  "breakcore", "noise", "industrial", "deconstructed",
+  "microtonal", "atonal", "dissonant", "genre-bending",
+  "genre bending", "outsider", "avantgarde", "left field",
+  "sound collage", "free improvisation", "odd time"
+];
 
 function cors(body, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -56,69 +54,62 @@ function first(...values) {
   return null;
 }
 
-function textValue(value) {
-  if (typeof value === "string") return value;
-  if (typeof value === "number") return String(value);
-
-  if (Array.isArray(value)) {
-    return value.map(textValue).filter(Boolean).join(", ");
-  }
-
-  return "";
-}
-
-function hasTerm(text, term) {
-  const haystack = " " + norm(text) + " ";
-  const needle = " " + norm(term) + " ";
-
-  return haystack.includes(needle);
-}
-
+// Odczyt wersji wyłącznie z jawnych danych API.
+// Nie zgadujemy wersji na podstawie nazwy chirp.
 function modelLabel(d) {
   const md = d?.metadata || {};
-  const clip = d?.clip || {};
 
   return String(first(
     d?.major_model_version,
     d?.model_version,
     md.major_model_version,
-    md.model_version,
-    clip.major_model_version,
-    clip.model_version
-  ) || "");
+    md.model_version
+  ) || "").toLowerCase().trim();
 }
 
+// Zakres obsługiwanych generacji: V3 – V4.5+.
+// V5 i V6 pozostają poza zakresem.
 function ver(value, wanted) {
-  let x = norm(value);
+  const x = norm(value).replace(/\s+/g, "");
+  const w = norm(wanted).replace(/\s+/g, "");
 
   if (!x) return false;
 
-  if (!x.startsWith("v") && /^[0-9]/.test(x)) {
-    x = "v" + x;
+  const isV3 = x === "v3" || x === "v3-all";
+  const isV35 = x.includes("3.5");
+  const isV4 = x.startsWith("v4") && !x.startsWith("v4.5");
+  const isV45 = x.startsWith("v4.5");
+
+  // Wszystkie starsze generacje od V3 do V4.5+
+  if (["all", "old", "v3-v4.5", "v3-v4.5+"].includes(w)) {
+    return isV3 || isV35 || isV4 || isV45;
   }
 
-  if (wanted === "v3") {
-    return x === "v3" || x === "v3-all";
+  // V3
+  if (w === "v3") return isV3;
+
+  // V3.5
+  if (w === "v3.5") return isV35;
+
+  // V3 oraz V3.5
+  if (w === "v3both" || w === "v3+v3.5") {
+    return isV3 || isV35;
   }
 
-  if (wanted === "v3.5") {
-    return x.includes("3.5");
+  // V4
+  if (w === "v4") return isV4;
+
+  // V4.5
+  if (w === "v4.5") return isV45;
+
+  // V4.5 i warianty oznaczone jako V4.5+
+  if (w === "v4.5+" || w === "v4.5plus") {
+    return isV45;
   }
 
-  if (wanted === "v3both") {
-    return x === "v3" || x === "v3-all" || x.includes("3.5");
-  }
-
-  if (wanted === "v4") {
-    return x.startsWith("v4") && !x.includes("4.5");
-  }
-
-  if (wanted === "v4.5") {
-    return x.includes("4.5");
-  }
-
-  if (wanted === "both") {
-    return x.startsWith("v4");
+  // V4 oraz V4.5
+  if (w === "both" || w === "v4both" || w === "v4+v4.5") {
+    return isV4 || isV45;
   }
 
   return false;
@@ -126,41 +117,31 @@ function ver(value, wanted) {
 
 function expscore(text) {
   return EXP.reduce(
-    (n, term) => n + (hasTerm(text, term) ? 1 : 0),
+    (n, term) => n + (text.includes(norm(term)) ? 1 : 0),
     0
   );
 }
 
+// Odczyt metadanych z API Suno.
 function extract(d, id) {
   const md = d?.metadata || {};
   const persona = first(d?.persona, md.persona) || {};
   const voice = first(d?.voice, md.voice) || {};
 
-  const tags = [
-    d.tags,
-    md.tags,
-    d.display_tags,
-    md.display_tags,
-    d.style,
-    md.style
-  ]
-    .map(textValue)
-    .filter(Boolean)
-    .join(", ");
+  const tags = first(md.tags, d.tags) || "";
+  const displayTags = first(d.display_tags, md.display_tags) || "";
 
-  const description = textValue(first(
-    d.gpt_description_prompt,
+  const prompt = first(
     md.gpt_description_prompt,
-    d.description,
-    md.description,
-    d.prompt,
-    md.prompt
-  ));
+    d.gpt_description_prompt,
+    md.prompt,
+    d.prompt
+  ) || "";
 
-  const negativeTags = textValue(first(
-    d.negative_tags,
-    md.negative_tags
-  ));
+  const description = first(
+    md.description,
+    d.description
+  ) || "";
 
   return {
     id: d?.id || id,
@@ -173,9 +154,11 @@ function extract(d, id) {
     display_name: d.display_name || "",
 
     tags,
-    display_tags: textValue(first(d.display_tags, md.display_tags)),
+    display_tags: displayTags,
+    prompt,
     description,
-    negative_tags: negativeTags,
+
+    negative_tags: first(md.negative_tags, d.negative_tags) || "",
 
     created_at: d.created_at || "",
     audio_url: first(d.audio_url, md.audio_url) || "",
@@ -186,7 +169,7 @@ function extract(d, id) {
     can_download_remix: first(d.can_download_remix, md.can_download_remix),
     is_remix: first(d.is_remix, md.is_remix),
 
-    is_public: first(d.is_public, md.is_public),
+    is_public: d.is_public ?? null,
 
     clip_type: first(md.type, d.type),
     source_type: first(
@@ -226,38 +209,43 @@ function extract(d, id) {
       persona.persona_name
     ),
 
-    source_clips: first(d.source_clips, md.source_clips),
-
-    raw_api: d
+    source_clips: first(d.source_clips, md.source_clips)
   };
 }
 
+// Pola wyszukiwania obejmuje teraz także opisy i prompty.
+// Nie przeszukujemy negative_tags, żeby nie dopasowywać
+// utworów na podstawie tego, czego autor nie chciał.
 function searchable(d) {
   return norm([
     d.tags,
     d.display_tags,
-    d.description,
     d.title,
-    d.model_name
+    d.model_name,
+    d.prompt,
+    d.description
   ].filter(Boolean).join(" "));
 }
 
 function score(d, styleTerms, excluded, matchMode, experimentalMode) {
   const h = searchable(d);
 
-  if (excluded.some(term => hasTerm(h, term))) {
+  if (excluded.some(term => h.includes(term))) {
     return null;
   }
 
-  const hits = styleTerms.filter(term => hasTerm(h, term)).length;
+  const hits = styleTerms.filter(term => h.includes(term)).length;
 
-  // Tryb ALL: wszystkie wpisane terminy muszą wystąpić.
-  if (styleTerms.length && matchMode === "all" && hits !== styleTerms.length) {
+  // Pierwszy wpisany termin jest głównym filtrem.
+  if (styleTerms.length && !h.includes(styleTerms[0])) {
     return null;
   }
 
-  // Tryb ANY: wystarczy jeden z wpisanych terminów.
-  if (styleTerms.length && matchMode === "any" && hits === 0) {
+  if (styleTerms.length && matchMode === "all" && hits < styleTerms.length) {
+    return null;
+  }
+
+  if (styleTerms.length && matchMode === "any" && hits < 1) {
     return null;
   }
 
@@ -269,7 +257,7 @@ function score(d, styleTerms, excluded, matchMode, experimentalMode) {
 
   let matchScore = hits * 100 + experimentalHits * 10;
 
-  if (styleTerms.length && hasTerm(h, styleTerms[0])) {
+  if (styleTerms.length && h.includes(styleTerms[0])) {
     matchScore += 30;
   }
 
@@ -284,6 +272,7 @@ function score(d, styleTerms, excluded, matchMode, experimentalMode) {
   };
 }
 
+// Pobieranie listy ID z datasetu.
 async function ids() {
   const key = new Request("https://cache.local/suno-ids");
 
@@ -325,6 +314,7 @@ async function ids() {
   return unique;
 }
 
+// Pobieranie pojedynczego utworu.
 async function clip(id) {
   try {
     const response = await fetch(API + id, {
@@ -391,7 +381,7 @@ export default {
     if (url.pathname === "/health") {
       return cors({
         ok: true,
-        version: "explorer-4",
+        version: "explorer-5",
         message: "Worker działa."
       });
     }
@@ -470,6 +460,8 @@ export default {
     try {
       const wanted = url.searchParams.get("model") || "both";
 
+      // Limit 20 pozostaje celowy: chroni przed limitem
+      // podzapytań Cloudflare podczas jednego wywołania.
       const count = Math.min(
         Math.max(Number(url.searchParams.get("tries")) || 20, 1),
         20
@@ -502,7 +494,8 @@ export default {
         fetch_errors: 0,
         model_missing: 0,
         model_mismatch: 0,
-        matched: 0
+        matched: 0,
+        model_versions: {}
       };
 
       // Maksymalnie 5 równoległych zapytań do API Suno.
@@ -527,6 +520,10 @@ export default {
           stats.complete++;
 
           const data = item.data;
+          const model = data.model_version || "unknown";
+
+          stats.model_versions[model] =
+            (stats.model_versions[model] || 0) + 1;
 
           if (!data.model_version) {
             stats.model_missing++;
