@@ -1,77 +1,339 @@
 <!doctype html>
 <html lang="pl">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Suno Old Explorer — Explorer 9.0</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Suno Old Explorer — Explorer 8.5</title>
 <style>
-:root{color-scheme:dark}*{box-sizing:border-box}body{font-family:system-ui,Segoe UI,sans-serif;background:#101114;color:#eee;margin:0;padding:20px}main{max-width:1120px;margin:auto}header,.row,.toolbar{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}h1{margin:0;font-size:clamp(24px,4vw,34px)}p{color:#aab0bb;line-height:1.5}.version{font-size:12px;background:#24372b;color:#b5ebc2;padding:7px 11px;border-radius:999px;font-weight:700}.card{background:#1a1c21;border:1px solid #333741;border-radius:15px;padding:17px;margin-top:15px}label{display:block;color:#aab0bb;font-size:12px;text-transform:uppercase;letter-spacing:.05em;margin:12px 0 6px}input,select,button,textarea{font:inherit;border-radius:9px;border:1px solid #484d59;background:#252830;color:#fff;padding:10px 12px}input,textarea{width:100%}textarea{min-height:100px;resize:vertical}button{cursor:pointer}button:hover{background:#343944}button:disabled{opacity:.55;cursor:wait}.primary{background:#315c43;border-color:#477b5b;font-weight:700}.row>*{flex:1;min-width:180px}.muted{color:#9298a5;font-size:13px;line-height:1.45}.status{min-height:24px;margin-top:10px;color:#c8cbd2;line-height:1.5}.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(105px,1fr));gap:8px;margin-top:12px}.stat{background:#24272e;border:1px solid #373c47;border-radius:10px;padding:10px}.stat b{display:block;font-size:20px}.stat span{font-size:11px;color:#a5aab5}.pills{display:flex;gap:7px;flex-wrap:wrap;margin:10px 0}.pill,.tag{border:1px solid #444957;background:#22252c;color:#cdd2dc;border-radius:999px;padding:6px 10px;font-size:12px}.pill.active{background:#294d38;border-color:#477b5b}.results{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:11px;margin-top:12px}.song,.session{background:#20232a;border:1px solid #393e49;border-radius:12px;padding:12px;min-width:0}.song h3{font-size:16px;margin:6px 0;overflow-wrap:anywhere}.song .sub{font-size:12px;color:#9da4b2}.song button{width:100%;margin:9px 0;background:#294b39}.badge{display:inline-block;font-size:11px;padding:4px 7px;border-radius:7px;background:#30343d;color:#dce1ea;margin:0 4px 4px 0}.badge.ver{background:#294b39;color:#c3efcf}.session-list{display:grid;gap:8px;margin-top:10px}.session{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.session .info{flex:1;min-width:180px}.session button{padding:7px 10px}.hidden{display:none}hr{border:0;border-top:1px solid #363a44;margin:15px 0}.player{position:sticky;bottom:8px;background:#171a20;border:1px solid #4a594d;border-radius:12px;padding:10px;margin-top:12px;z-index:4}.queue{display:grid;gap:6px;margin-top:10px}.qitem{padding:8px;background:#24272e;border-radius:8px;display:flex;gap:8px;align-items:center}.qitem span{flex:1}.warning{color:#e8c98a}.good{color:#9cdbad}@media(max-width:560px){body{padding:10px}.card{padding:13px}}
-</style></head>
-<body><main>
-<header><div><h1>🎧 Suno Old Explorer</h1><p style="margin:5px 0">Archiwum starszych generacji Suno · sesje zapisywane lokalnie</p></div><div class="version">EXPLORER 9.0 · WERSJA TESTOWA</div></header>
+:root{color-scheme:dark}
+*{box-sizing:border-box}
+body{font-family:system-ui,-apple-system,Segoe UI,sans-serif;background:#101114;color:#eee;margin:0;padding:22px}
+main{max-width:1040px;margin:auto}
+header{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+h1{margin:0;font-size:clamp(24px,4vw,34px)}
+p{color:#aaa;line-height:1.5}
+.version{font-size:12px;letter-spacing:.08em;background:#24372b;color:#a8e6b7;border:1px solid #365a40;padding:7px 11px;border-radius:999px;font-weight:700}
+.card{background:#1a1c21;border:1px solid #333741;border-radius:16px;padding:18px;margin-top:16px}
+label{display:block;color:#aaa;font-size:12px;text-transform:uppercase;letter-spacing:.05em;margin:12px 0 6px}
+input,select,button{font:inherit;border-radius:10px;border:1px solid #4a4e59;background:#252830;color:#fff;padding:11px 13px}
+input{width:100%}
+button{cursor:pointer}
+button:hover{background:#343944}
+button:disabled{opacity:.55;cursor:wait}
+.primary{background:#315c43;border-color:#477b5b;font-weight:700}
+.primary:hover{background:#3d704f}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.row>*{flex:1;min-width:180px}
+.muted{color:#9298a5;font-size:13px}
+.status{min-height:24px;color:#c8cbd2;line-height:1.5;margin-top:12px}
+.toolbar{display:flex;gap:9px;flex-wrap:wrap;align-items:center}
+.toolbar input{flex:1;min-width:210px}
+.pills{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}
+.pill{border:1px solid #444957;background:#22252c;color:#cdd2dc;border-radius:999px;padding:6px 10px;font-size:12px}
+.pill.active{background:#294d38;border-color:#477b5b;color:#c0f0cc}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px;margin-top:14px}
+.stat{background:#24272e;border:1px solid #373c47;border-radius:10px;padding:10px}
+.stat b{display:block;font-size:20px}
+.stat span{font-size:11px;color:#a5aab5}
+.results{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin-top:14px}
+.song{background:#20232a;border:1px solid #393e49;border-radius:13px;padding:13px;min-width:0}
+.song h3{font-size:16px;margin:0 0 5px;overflow-wrap:anywhere}
+.song .sub{font-size:12px;color:#9da4b2;margin-bottom:9px}
+.song .play-song{width:100%;margin:8px 0;background:#294b39;border-color:#477b5b}
+.queue-list{display:grid;gap:7px;margin-top:12px}
+.queue-item{display:flex;gap:10px;align-items:center;background:#22252c;border:1px solid #3b404b;border-radius:9px;padding:9px}
+.queue-item.current{border-color:#78bd8c;background:#26372d}
+.queue-item button{padding:7px 10px;flex:0 0 auto}
+.queue-item .queue-title{min-width:0;flex:1;overflow-wrap:anywhere}
+.player-wrap{position:sticky;bottom:8px;z-index:5;background:#171a20;border:1px solid #4a594d;border-radius:14px;padding:12px;margin-top:14px;box-shadow:0 6px 24px #0009}
+.player-controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.player-controls button{padding:8px 12px}
+.song a{color:#91c9ff}
+.song details{margin-top:8px}
+.song pre{max-height:250px;overflow:auto;white-space:pre-wrap;word-break:break-word;background:#111318;border-radius:8px;padding:9px;font-size:11px}
+.badge{display:inline-block;font-size:11px;padding:4px 7px;border-radius:7px;background:#30343d;color:#dce1ea;margin:0 4px 4px 0}
+.badge.version{background:#294b39;color:#c3efcf;border-color:transparent}
+.hidden{display:none}
+hr{border:0;border-top:1px solid #363a44;margin:16px 0}
+@media(max-width:560px){body{padding:12px}.card{padding:14px}}
+</style>
+</head>
+<body>
+<main>
+<header>
+  <div>
+    <h1>🎧 Suno Old Explorer</h1>
+    <p style="margin:5px 0 0">Archiwum publicznych playlist i separacja generacji modeli Suno.</p>
+  </div>
+  <div class="version">EXPLORER 8.5 · WERSJA TESTOWA</div>
+</header>
 
 <section class="card">
-<b>Nowa sesja odkrywania</b>
-<label for="query">Hasło wyszukiwania (np. relax saturday, dnb, latino)</label>
-<input id="query" placeholder="Wpisz dowolne hasło — to nazwa sesji">
-<label for="sources">Linki do publicznych playlist lub ich UUID — po jednym w wierszu</label>
-<textarea id="sources" placeholder="https://suno.com/playlist/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx&#10;https://suno.com/playlist/yyyyyyyy-yyyy-yyyy-yyyy-yyyyyyyyyyyy"></textarea>
-<div class="row">
-<div><label for="maxPages">Limit stron na playlistę</label><select id="maxPages"><option value="2">2 strony · do 100 utworów</option><option value="5">5 stron · do 250 utworów</option><option value="10">10 stron · do 500 utworów</option><option value="50" selected>50 stron · do 2500 utworów</option></select></div>
-<div><label for="sortMode">Kolejność wyników</label><select id="sortMode"><option value="date">Chronologicznie · najstarsze pierwsze</option><option value="version">Priorytet starych modeli, potem data</option></select></div>
-<div style="display:flex;align-items:end"><button class="primary" id="create" style="width:100%">UTWÓRZ SESJĘ I ZBIERAJ</button></div>
-</div>
-<div class="status" id="status">Gotowe. Wklej jeden lub wiele linków do publicznych playlist.</div>
-<div class="muted">W tej wersji działa sprawdzony publiczny endpoint playlist. Wyniki wyszukiwania Suno, profile twórców, albumy i gatunki nie są jeszcze automatycznie pobierane — nie udajemy, że te źródła zostały obsłużone. Można je dodać po rozpoznaniu ich publicznych endpointów.</div>
+  <b>Import publicznej playlisty</b>
+  <label for="playlist">Adres playlisty Suno lub ID</label>
+  <input id="playlist" placeholder="https://suno.com/playlist/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx">
+  <div class="row">
+    <div>
+      <label for="maxPages">Maksymalna liczba stron</label>
+      <select id="maxPages">
+        <option value="2" selected>2 strony (do 100 utworów)</option>
+        <option value="5">5 stron (do 250 utworów)</option>
+        <option value="10">10 stron (do 500 utworów)</option>
+        <option value="50">Wszystkie (limit 50 stron)</option>
+      </select>
+    </div>
+    <div style="display:flex;align-items:end">
+      <button class="primary" id="load" style="width:100%">POBIERZ I ROZDZIEL WERSJE</button>
+    </div>
+  </div>
+  <div class="status" id="status">Gotowe. Wklej adres publicznej playlisty.</div>
+  <div class="muted">Źródło: publiczny endpoint playlist Suno. Odtwarzanie odbywa się na oficjalnej stronie utworu w Suno.</div>
 </section>
 
-<section class="card"><div class="row"><div><b>Historia wyszukiwań</b><div class="muted">Każde hasło ma własną sesję, źródła, utwory i postęp. Dane pozostają w tej przeglądarce.</div></div><button id="refreshSessions">Odśwież</button></div><div class="session-list" id="sessions"><div class="muted">Odczytuję zapisane sesje…</div></div></section>
-
-<section class="card hidden" id="workspace">
-<div class="row"><div><b id="sessionTitle">Sesja</b><div class="muted" id="sessionMeta"></div></div><div class="toolbar"><button id="resume" class="primary">Wznów skanowanie</button><button id="export">Eksportuj JSON</button></div></div>
-<div class="stats" id="stats"></div><hr>
-<div class="row"><div><label for="versionFilter">Wersja modelu</label><select id="versionFilter"><option value="all">Wszystkie starsze modele</option></select></div><div><label for="dateFrom">Data od</label><input id="dateFrom" type="date"></div><div><label for="dateTo">Data do</label><input id="dateTo" type="date"></div></div>
-<div class="row"><div><label for="textFilter">Szukaj w tytule, autorze, tagach i promptach</label><input id="textFilter" placeholder="np. ambient, analog, dreamy"></div><div><label for="sortResults">Sortowanie</label><select id="sortResults"><option value="date">Najstarsze utwory najpierw</option><option value="version">Starsze modele najpierw</option><option value="newest">Najnowsze utwory najpierw</option></select></div></div>
-<div class="pills" id="versionPills"></div><div class="muted" id="resultCount"></div><div class="results" id="results"></div>
-<div class="player"><div class="toolbar"><b id="nowPlaying">Kolejka utworów</b><button id="prev">⏮ Poprzedni</button><button id="next">Następny ⏭</button></div><div class="muted">Otwieramy oficjalną stronę utworu Suno. Odtwarzanie wymaga naciśnięcia Play na stronie Suno.</div><div class="queue" id="queue"></div></div>
+<section class="card hidden" id="summary">
+  <div class="row" style="align-items:center">
+    <div>
+      <b id="playlistTitle">Wyniki playlisty</b>
+      <div class="muted" id="playlistMeta"></div>
+    </div>
+    <div class="muted" id="versionNote" style="text-align:right">Explorer 8</div>
+  </div>
+  <div class="stats" id="stats"></div>
+  <hr>
+  <div class="toolbar">
+    <input id="filterText" placeholder="Filtruj tytuł, tagi, prompt lub autora…">
+    <select id="versionFilter" style="max-width:220px">
+      <option value="all">Wszystkie obsługiwane wersje</option>
+    </select>
+  </div>
+  <div class="row">
+    <div><label for="styleFilter">Styl / tagi (oddziel przecinkami)</label><input id="styleFilter" placeholder="np. ambient, dnb, trance"></div>
+    <div><label for="excludeFilter">Wyklucz słowa</label><input id="excludeFilter" placeholder="np. anime, k-pop"></div>
+  </div>
+  <div class="row">
+    <div><label for="matchFilter">Dopasowanie tagów</label><select id="matchFilter"><option value="all">Wszystkie wpisane słowa</option><option value="any">Dowolne wpisane słowo</option></select></div>
+    <div><label for="experimentalFilter">Eksperymentalne DNA</label><select id="experimentalFilter"><option value="normal">Normalny</option><option value="boost">Preferuj eksperymentalne</option><option value="only">Tylko eksperymentalne</option></select></div>
+  </div>
+  <div class="toolbar" style="margin-top:12px">
+    <button id="randomSong">🎲 Losuj z widocznych wyników</button>
+    <span class="muted" style="align-self:center">Filtry działają lokalnie na pobranej playliście.</span>
+  </div>
+  <div class="pills" id="versionPills"></div>
+  <div class="muted" id="resultCount" style="margin-top:12px"></div>
+  <div class="results" id="results"></div>
+  <section class="card" id="queueCard" style="margin-top:18px">
+    <div class="row" style="align-items:center">
+      <div><b> kolejka utworów</b><div class="muted" id="queueInfo">Kolejka utworów widocznych po zastosowaniu filtrów.</div></div>
+      <div class="toolbar" style="justify-content:flex-end"><button id="playQueue" class="primary">▶ Odtwarzaj kolejkę</button><button id="clearQueue">Wyczyść</button></div>
+    </div>
+    <div class="player-wrap">
+      <div class="player-controls"><button id="prevTrack">⏮ Poprzedni</button><button id="nextTrack">Następny ⏭</button><b id="nowPlaying">Nic nie jest odtwarzane</b></div>
+      <div class="muted" id="playerStatus">Przyciski otwierają wybrany utwór w oficjalnym odtwarzaczu Suno w nowej karcie.</div>
+    </div>
+    <div class="queue-list" id="queueList"></div>
+  </section>
 </section>
 
-<section class="card"><b>Zasady klasyfikacji</b><p class="muted">Wersja modelu pochodzi wyłącznie z <code>major_model_version</code>. Nie zgadujemy jej z model_name. v3, v3.5, v4, v4.5 i warianty są rozdzielane osobno; v5 jest osobno; v6+ nie trafia do głównego archiwum; brak wersji pozostaje w kategorii Nieustalone. Daty są niezależnym kryterium — nie wyprowadzamy wersji modelu z roku utworzenia.</p><p class="muted warning">Sesje są zapisywane lokalnie w IndexedDB tej przeglądarki. Wyczyść dane witryny lub zmień przeglądarkę, a lokalna historia może zniknąć. Wykonuj eksport JSON jako kopię zapasową.</p><a id="health" target="_blank" rel="noopener">Sprawdź status Workera</a></section>
+<section class="card">
+  <b>Reguły archiwum — Explorer 8.5</b>
+  <p class="muted">Oddzielne kategorie: v3, v3.5, v4, v4.5, v4.5+, warianty Pro rozpoznane jawnie oraz v5. Rekordy bez major_model_version są odseparowane jako nieustalone. Wersje v6 i nowsze są odrzucane. Nie zgadujemy oznaczeń Pro na podstawie samej nazwy technicznej modelu.</p>
+  <p class="muted">Informacje o coverach i pochodzeniu pokazujemy tylko wtedy, gdy API faktycznie je zwraca. Puste pole nie oznacza, że utwór na pewno nie jest coverem.</p>
+  <a id="health" href="#" target="_blank" rel="noopener">Sprawdź status Workera</a>
+</section>
 </main>
 <script>
-const W="https://suno-old-explorer.rustykalnyvibe.workers.dev", DB="suno-old-explorer-9", STORE="sessions";
+const W="https://suno-old-explorer.rustykalnyvibe.workers.dev";
 const $=id=>document.getElementById(id);
 $("health").href=W+"/health";
-let active=null, queue=[], queueIndex=-1;
-const order=["v3","v3.5","v4","v4.5","v4.5+","v4.5pro","v4.5+pro","v4.5-all","v5","unknown"];
-const labels={v3:"v3", "v3.5":"v3.5",v4:"v4","v4.5":"v4.5","v4.5+":"v4.5+","v4.5pro":"v4.5 Pro","v4.5+pro":"v4.5+ Pro","v4.5-all":"v4.5-all",v5:"v5",unknown:"Nieustalone"};
-function db(){return new Promise((resolve,reject)=>{const r=indexedDB.open(DB,1);r.onupgradeneeded=()=>r.result.createObjectStore(STORE,{keyPath:"id"});r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});}
-async function allSessions(){const d=await db();return new Promise((res,rej)=>{const r=d.transaction(STORE).objectStore(STORE).getAll();r.onsuccess=()=>res(r.result.sort((a,b)=>b.updatedAt-a.updatedAt));r.onerror=()=>rej(r.error);});}
-async function saveSession(s){s.updatedAt=Date.now();const d=await db();return new Promise((res,rej)=>{const t=d.transaction(STORE,"readwrite");t.objectStore(STORE).put(s);t.oncomplete=()=>res();t.onerror=()=>rej(t.error);});}
-function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
-function uuidFromLine(line){const m=String(line).match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i);return m?m[0]:"";}
-function classify(s){const raw=String(s.major_model_version||"").trim().toLowerCase();const m=raw.match(/(?:^|[^a-z])v?(\d+)(?:\.(\d+))?/i);let key="unknown",excluded=false,label="Nieustalone";if(m){let major=+m[1],minor=m[2]===undefined?null:+m[2];if(major>=6){key="excluded";excluded=true;label=raw;}else if(raw.includes("pro")&&raw.includes("4.5+")){key="v4.5+pro";label="v4.5+ Pro";}else if(raw.includes("pro")&&raw.includes("4.5")){key="v4.5pro";label="v4.5 Pro";}else if(raw.includes("4.5-all")){key="v4.5-all";label="v4.5-all";}else if(major===3&&minor===5){key="v3.5";label=key;}else if(major===3){key="v3";label=key;}else if(major===4&&minor===5&&raw.includes("+")){key="v4.5+";label=key;}else if(major===4&&minor===5){key="v4.5";label=key;}else if(major===4){key="v4";label=key;}else if(major===5){key="v5";label=key;}}return {...s,_version:{key,label,excluded}};}
-function parseDate(s){if(!s)return null;const d=new Date(s);return Number.isNaN(d.getTime())?null:d.getTime();}
-function versionRank(s){const i=order.indexOf(s._version?.key);return i<0?99:i;}
-async function refreshSessions(){try{const rows=await allSessions();$("sessions").innerHTML=rows.length?rows.map(s=>`<div class="session"><div class="info"><b>${esc(s.query||"Bez hasła")}</b><div class="muted">${new Date(s.createdAt).toLocaleString("pl-PL")} · ${s.songs.length} utworów · ${s.sources.length} źródeł · ${esc(s.status)}</div></div><button data-open="${s.id}">Otwórz</button><button data-run="${s.id}">Wznów</button></div>`).join(""):"<div class='muted'>Brak zapisanych sesji. Utwórz pierwszą powyżej.</div>";$("sessions").querySelectorAll("[data-open]").forEach(b=>b.onclick=()=>openSession(b.dataset.open));$("sessions").querySelectorAll("[data-run]").forEach(b=>b.onclick=async()=>{await openSession(b.dataset.run);scanActive();});}catch(e){$("sessions").textContent="Nie udało się otworzyć lokalnej bazy: "+e.message;}}
-function updateMeta(){if(!active)return;$("sessionTitle").textContent=active.query||"Bez hasła";const done=active.sources.filter(x=>x.done).length;$("sessionMeta").textContent=`${active.songs.length} unikalnych utworów · ${done}/${active.sources.length} źródeł zakończonych · aktualizacja ${new Date(active.updatedAt||active.createdAt).toLocaleString("pl-PL")}`;}
-async function openSession(id){active=(await allSessions()).find(s=>s.id===id);if(!active)return;$("workspace").classList.remove("hidden");updateMeta();render();}
-function counts(){const c={};active.songs.forEach(s=>{const k=s._version?.key||"unknown";c[k]=(c[k]||0)+1;});return c;}
-function render(){if(!active)return;const c=counts();$("stats").innerHTML=order.filter(k=>c[k]).map(k=>`<div class="stat"><b>${c[k]}</b><span>${labels[k]}</span></div>`).join("")+`<div class="stat"><b>${active.sources.length}</b><span>Źródła</span></div>`;
-const vf=$("versionFilter"),old=vf.value;vf.innerHTML='<option value="all">Wszystkie starsze modele + v5</option>'+order.filter(k=>k!=="unknown"&&c[k]).map(k=>`<option value="${k}">${labels[k]}</option>`).join("")+'<option value="unknown">Nieustalone</option>';if([...vf.options].some(o=>o.value===old))vf.value=old;
-$("versionPills").innerHTML=[["all","Wszystkie"],...order.filter(k=>c[k]).map(k=>[k,labels[k]])].map(([k,l])=>`<button class="pill ${vf.value===k?"active":""}" data-v="${k}">${l} · ${c[k]||active.songs.length}</button>`).join("");$("versionPills").querySelectorAll("[data-v]").forEach(b=>b.onclick=()=>{vf.value=b.dataset.v;render();});
-const q=$("textFilter").value.toLowerCase(),from=$("dateFrom").value?Date.parse($("dateFrom").value+"T00:00:00"):null,to=$("dateTo").value?Date.parse($("dateTo").value+"T23:59:59"):null;let rows=active.songs.filter(s=>{const hay=[s.title,s.tags,s.prompt,s.handle,s.display_name].join(" ").toLowerCase(),d=parseDate(s.created_at);return (vf.value==="all"?(s._version.key!=="unknown"&&!s._version.excluded):s._version.key===vf.value)&&(!q||hay.includes(q))&&(!from||(d!==null&&d>=from))&&(!to||(d!==null&&d<=to));});
-const sort=$("sortResults").value;rows.sort((a,b)=>{if(sort==="version"){const r=versionRank(a)-versionRank(b);if(r)return r;}const da=parseDate(a.created_at),dbb=parseDate(b.created_at);if(da===null)return dbb===null?0:1;if(dbb===null)return -1;return sort==="newest"?dbb-da:da-dbb;});
-$("resultCount").textContent=`Widoczne ${rows.length} z ${active.songs.length} zapisanych utworów. Daty nieustalone: ${active.songs.filter(s=>!parseDate(s.created_at)).length}.`;
-$("results").innerHTML=rows.slice(0,500).map((s,i)=>`<article class="song"><span class="badge ver">${esc(s._version.label)}</span><span class="badge">${esc(s.created_at||"Brak daty")}</span><h3>${esc(s.title)}</h3><div class="sub">${esc(s.display_name||s.handle||"Nieznany autor")}</div><button data-song="${esc(s.id)}">Otwórz w Suno ↗</button><div class="muted">Tagi: ${esc(s.tags||"—")}</div><details><summary>Metadane</summary><pre>${esc(JSON.stringify({major_model_version:s.major_model_version,model_name:s.model_name,created_at:s.created_at,prompt:s.prompt,task:s.task,is_remix:s.is_remix,cover_clip_id:s.cover_clip_id,clip_roots:s.clip_roots,history:s.history},null,2))}</pre></details></article>`).join("");$("results").querySelectorAll("[data-song]").forEach(b=>b.onclick=()=>{const s=rows.find(x=>x.id===b.dataset.song);if(s)window.open("https://suno.com/song/"+encodeURIComponent(s.id),"_blank","noopener");});
-queue=rows;renderQueue();updateMeta();}
-function renderQueue(){$("queue").innerHTML=queue.slice(0,100).map((s,i)=>`<div class="qitem"><button data-q="${i}">▶</button><span>${i+1}. ${esc(s.title)} <small class="muted">· ${esc(s._version.label)}</small></span></div>`).join("");$("queue").querySelectorAll("[data-q]").forEach(b=>b.onclick=()=>play(Number(b.dataset.q)));}
-function play(i){if(!queue[i])return;queueIndex=i;const s=queue[i];$("nowPlaying").textContent=`${s.title} · ${s._version.label}`;window.open("https://suno.com/song/"+encodeURIComponent(s.id),"_blank","noopener");}
-$("prev").onclick=()=>play((queueIndex-1+queue.length)%queue.length);$("next").onclick=()=>play((queueIndex+1)%queue.length);
-["versionFilter","dateFrom","dateTo","textFilter","sortResults"].forEach(id=>$(id).addEventListener("input",render));
-$("refreshSessions").onclick=refreshSessions;
-$("create").onclick=async()=>{const query=$("query").value.trim(),lines=$("sources").value.split(/\r?\\n/).map(x=>x.trim()).filter(Boolean),ids=[...new Set(lines.map(uuidFromLine).filter(Boolean))];if(!ids.length){$("status").textContent="Wklej przynajmniej jeden prawidłowy link/UUID playlisty. Samo hasło nie pobiera jeszcze wyników wyszukiwania Suno.";return;}active={id:crypto.randomUUID(),query,createdAt:Date.now(),updatedAt:Date.now(),status:"Nowa",maxPages:+$("maxPages").value,sortMode:$("sortMode").value,sources:ids.map(id=>({id,page:1,done:false,error:""})),songs:[],excludedCount:0};await saveSession(active);await refreshSessions();await openSession(active.id);scanActive();};
-async function scanActive(){if(!active)return;const btn=$("resume");btn.disabled=true;active.status="Skanowanie";await saveSession(active);try{for(let si=0;si<active.sources.length;si++){const src=active.sources[si];if(src.done)continue;for(let p=src.page;p<=active.maxPages;p++){src.page=p;$("status").textContent=`${active.query||"Sesja"} · źródło ${si+1}/${active.sources.length} · strona ${p}/${active.maxPages} · ${active.songs.length} utworów`;await saveSession(active);const r=await fetch(`${W}/playlist?id=${encodeURIComponent(src.id)}&page=${p}`);const raw=await r.text();let data;try{data=JSON.parse(raw)}catch{throw new Error(`Źródło ${src.id}: niepoprawna odpowiedź Workera HTTP ${r.status}`)}if(!r.ok||!data.ok)throw new Error(data.error||`HTTP ${r.status}`);const seen=new Set(active.songs.map(s=>s.id));for(const row of data.results||[]){const s=classify(row);if(s._version.excluded){active.excludedCount++;continue;}if(s.id&&!seen.has(s.id)){active.songs.push(s);seen.add(s.id);}}await saveSession(active);render();if(!data.received||data.received<50||(data.total&&p*50>=data.total)){src.done=true;break;}if(p===active.maxPages)src.done=true;}src.error="";await saveSession(active);}active.status=active.sources.every(s=>s.done)?"Zakończona":"Częściowo zebrana";$("status").textContent=`Zakończono przebieg. ${active.songs.length} unikalnych utworów; odrzucone v6+: ${active.excludedCount}.`; }catch(e){active.status="Przerwana — można wznowić";active.lastError=e.message;$("status").textContent="Błąd: "+e.message+" · Postęp zapisany, możesz wznowić."; }finally{btn.disabled=false;await saveSession(active);await refreshSessions();updateMeta();}}
-$("resume").onclick=scanActive;
-$("export").onclick=()=>{if(!active)return;const blob=new Blob([JSON.stringify(active,null,2)],{type:"application/json"}),a=document.createElement("a"),u=URL.createObjectURL(blob);a.href=u;a.download=`Suno-Explorer-${(active.query||"sesja").replace(/[^\w-]+/g,"_")}.json`;a.click();URL.revokeObjectURL(u);};
-refreshSessions();
-</script></body></html>
+
+let allSongs=[];
+let counts={};
+let selectedVersion="all";
+let currentQueue=[];
+let currentIndex=-1;
+let currentSongId="";
+
+function esc(v){
+  return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+function getVersion(s){
+  const raw=String(s.major_model_version||"").trim().toLowerCase().replace(/\s+/g," ");
+  // Nie wyprowadzamy wersji z model_name: np. chirp-v3 występował przy major_model_version v3.5.
+  const v=raw;
+  const n=v.match(/(?:^|[^a-z])v?(\d+)(?:\.(\d+))?/i);
+  if(!n) return {key:"unknown",label:"Nieznana",excluded:false,raw};
+  const major=Number(n[1]), minor=n[2]===undefined?null:Number(n[2]);
+  if(major>=6) return {key:"excluded",label:raw||v,excluded:true,raw};
+  if(raw.includes("pro") && raw.includes("4.5+")) return {key:"v4.5+pro",label:"v4.5+ Pro",excluded:false,raw};
+  if(raw.includes("pro") && raw.includes("4.5")) return {key:"v4.5pro",label:"v4.5 Pro",excluded:false,raw};
+  if(raw.includes("4.5-all")) return {key:"v4.5-all",label:"v4.5-all",excluded:false,raw};
+  if(major===3 && minor===5) return {key:"v3.5",label:"v3.5",excluded:false,raw};
+  if(major===3) return {key:"v3",label:"v3",excluded:false,raw};
+  if(major===4 && minor===5 && raw.includes("+")) return {key:"v4.5+",label:"v4.5+",excluded:false,raw};
+  if(major===4 && minor===5) return {key:"v4.5",label:"v4.5",excluded:false,raw};
+  if(major===4) return {key:"v4",label:"v4",excluded:false,raw};
+  if(major===5) return {key:"v5",label:"v5",excluded:false,raw};
+  return {key:"unknown",label:raw||v,excluded:false,raw};
+}
+function playlistId(input){
+  const m=String(input||"").match(/[0-9a-f]{8}-[0-9a-f-]{27,}/i);
+  return m?m[0]:"";
+}
+function classify(song){
+  const v=getVersion(song);
+  return {...song,_version:v};
+}
+function renderStats(){
+  const order=["v3","v3.5","v4","v4.5","v4.5+","v4.5pro","v4.5+pro","v4.5-all","v5","unknown","excluded"];
+  const labels={"v3":"v3","v3.5":"v3.5","v4":"v4","v4.5":"v4.5","v4.5+":"v4.5+","v4.5pro":"v4.5 Pro","v4.5+pro":"v4.5+ Pro","v4.5-all":"v4.5-all","v5":"v5","unknown":"Nieustalona — osobno","excluded":"Odrzucone v6+"};
+  $("stats").innerHTML=order.filter(k=>counts[k]).map(k=>`<div class="stat"><b>${counts[k]}</b><span>${labels[k]}</span></div>`).join("");
+  const opts=[["all","Wszystkie rozpoznane wersje"],...order.filter(k=>k!=="excluded"&&counts[k]).map(k=>[k,labels[k]])];
+  $("versionFilter").innerHTML=opts.map(([v,l])=>`<option value="${esc(v)}">${esc(l)}</option>`).join("");
+  $("versionPills").innerHTML=opts.map(([v,l])=>`<button class="pill ${v==="all"?"active":""}" data-version="${esc(v)}">${esc(l)}</button>`).join("");
+  $("versionPills").querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>setVersion(b.dataset.version)));
+}
+function setVersion(v){
+  selectedVersion=v;
+  $("versionFilter").value=v;
+  $("versionPills").querySelectorAll("button").forEach(b=>b.classList.toggle("active",b.dataset.version===v));
+  renderResults();
+}
+function getFilteredSongs(){
+  const q=$("filterText").value.trim().toLowerCase();
+  const styles=$("styleFilter").value.split(",").map(x=>x.trim().toLowerCase()).filter(Boolean);
+  const excluded=$("excludeFilter").value.split(",").map(x=>x.trim().toLowerCase()).filter(Boolean);
+  const match=$("matchFilter").value;
+  const expMode=$("experimentalFilter").value;
+  const expWords=["experimental","turntablism","avant-garde","abstract","weird","crazy","mystic","psychedelic","surreal","unconventional","glitch","idm","leftfield","breakcore","noise","industrial","deconstructed","microtonal","atonal","dissonant","genre-bending","sound collage"];
+  const filtered=allSongs.filter(s=>{
+    if(s._version.excluded) return false;
+    if(selectedVersion==="all"&&s._version.key==="unknown")return false;
+    if(selectedVersion!=="all"&&s._version.key!==selectedVersion)return false;
+    const hay=[s.title,s.tags,s.prompt,s.handle,s.display_name,s.model_name,s.task].join(" ").toLowerCase();
+    if(q&&!hay.includes(q))return false;
+    if(excluded.some(term=>hay.includes(term)))return false;
+    const hits=styles.filter(term=>hay.includes(term)).length;
+    if(styles.length&&(match==="all"?hits!==styles.length:hits===0))return false;
+    const expHits=expWords.filter(term=>hay.includes(term)).length;
+    if(expMode==="only"&&expHits===0)return false;
+    s._expHits=expHits;
+    return true;
+  });
+  if(expMode==="boost")filtered.sort((a,b)=>(b._expHits||0)-(a._expHits||0));
+  return filtered;
+}
+function renderResults(){
+  const filtered=getFilteredSongs();
+  const knownCount=allSongs.filter(s=>!s._version.excluded&&s._version.key!=="unknown").length;
+  const unknownCount=counts.unknown||0;
+  $("resultCount").textContent=selectedVersion==="unknown"
+    ? `Wyświetlono ${filtered.length} utworów z nieustaloną wersją — poza głównym archiwum modeli.`
+    : `Wyświetlono ${filtered.length} z ${knownCount} rozpoznanych utworów. ${unknownCount} z nieustaloną wersją odseparowano.`;
+  $("results").innerHTML=filtered.map((s,i)=>{
+    const origin=s.cover_clip_id?`<div class="muted">ID oryginału/coveru: ${esc(s.cover_clip_id)}</div>`:"";
+    const remix=s.is_remix===true?"TAK":s.is_remix===false?"NIE":"brak danych";
+    const task=s.task||s.type||"brak danych";
+    const play=s.id?`<button class="play-song" data-play-id="${esc(s.id)}">▶ Otwórz odtwarzacz Suno</button>`:"<div class='muted'>Brak ID utworu — nie można otworzyć odtwarzacza.</div>";
+    const suno=s.id?`<a href="https://suno.com/song/${encodeURIComponent(s.id)}" target="_blank" rel="noopener">Otwórz w Suno ↗</a>`:"";
+    return `<article class="song">
+      <span class="badge version">${esc(s._version.label)}</span><span class="badge">model: ${esc(s.model_name||"—")}</span><span class="badge">remix: ${remix}</span>
+      <h3>${esc(s.title)}</h3><div class="sub">${esc(s.display_name||s.handle||"Nieznany autor")} · ${esc(s.created_at||"brak daty")}</div>
+      ${play}
+      <div class="muted"><b>Tagi:</b> ${esc(s.tags||"—")}</div>
+      <div class="muted"><b>Typ / zadanie:</b> ${esc(task)}</div>${origin}
+      <div style="margin-top:8px">${suno}</div>
+      <details><summary>Metadane i pochodzenie</summary><pre>${esc(JSON.stringify({major_model_version:s.major_model_version,model_name:s.model_name,task:s.task,type:s.type,is_remix:s.is_remix,cover_clip_id:s.cover_clip_id,clip_roots:s.clip_roots,history:s.history,prompt:s.prompt,audio_url:s.audio_url},null,2))}</pre></details>
+    </article>`;
+  }).join("");
+  // Kolejka jest automatycznie odświeżana zgodnie z wersją i filtrami.
+  currentQueue=filtered.filter(s=>s.id);
+  if(currentSongId){
+    const idx=currentQueue.findIndex(s=>s.id===currentSongId);
+    currentIndex=idx;
+    if(idx<0)currentSongId="";
+  }
+  renderQueue();
+  $("results").querySelectorAll("[data-play-id]").forEach(b=>b.addEventListener("click",()=>{
+    const idx=currentQueue.findIndex(s=>s.id===b.dataset.playId);
+    if(idx>=0)playIndex(idx);
+  }));
+}
+function renderQueue(){
+  const list=$("queueList");
+  $("queueInfo").textContent=`${currentQueue.length} utworów z aktualnego wyboru (${selectedVersion==="all"?"wszystkie rozpoznane wersje":selectedVersion}).`;
+  list.innerHTML=currentQueue.map((s,i)=>`<div class="queue-item ${i===currentIndex?"current":""}"><button data-queue-index="${i}">▶</button><div class="queue-title"><b>${esc(s.title)}</b><div class="muted">${esc(s._version.label)} · ${esc(s.display_name||s.handle||"Nieznany autor")}</div></div><span class="muted">${i+1}/${currentQueue.length}</span></div>`).join("");
+  list.querySelectorAll("[data-queue-index]").forEach(b=>b.addEventListener("click",()=>playIndex(Number(b.dataset.queueIndex))));
+}
+function playIndex(index){
+  const song=currentQueue[index];
+  if(!song || !song.id)return;
+  currentIndex=index;
+  currentSongId=song.id;
+  const url=`https://suno.com/song/${encodeURIComponent(song.id)}`;
+  window.open(url,"_blank","noopener,noreferrer");
+  $("nowPlaying").textContent=`${song.title} — ${song._version.label}`;
+  $("playerStatus").textContent="Otwarto oficjalną stronę utworu Suno w nowej karcie.";
+  renderQueue();
+}
+function stepTrack(delta){
+  if(!currentQueue.length)return;
+  let next=currentIndex<0?0:currentIndex+delta;
+  if(next<0)next=currentQueue.length-1;
+  if(next>=currentQueue.length)next=0;
+  playIndex(next);
+}
+$("prevTrack").addEventListener("click",()=>stepTrack(-1));
+$("nextTrack").addEventListener("click",()=>stepTrack(1));
+$("playQueue").addEventListener("click",()=>playIndex(currentIndex>=0?currentIndex:0));
+$("clearQueue").addEventListener("click",()=>{currentQueue=[];currentIndex=-1;currentSongId="";$("nowPlaying").textContent="Nic nie wybrano";$("playerStatus").textContent="Kolejka wyczyszczona.";renderQueue();});
+
+$("versionFilter").addEventListener("change",e=>setVersion(e.target.value));
+["filterText","styleFilter","excludeFilter","matchFilter","experimentalFilter"].forEach(id=>{
+  $(id).addEventListener("input",renderResults);
+  $(id).addEventListener("change",renderResults);
+});
+$("randomSong").addEventListener("click",()=>{
+  const cards=[...$("results").querySelectorAll(".song")];
+  if(!cards.length){$("status").textContent="Brak widocznych utworów do losowania.";return;}
+  const chosen=cards[Math.floor(Math.random()*cards.length)];
+  chosen.scrollIntoView({behavior:"smooth",block:"center"});
+  chosen.style.outline="2px solid #78bd8c";
+  setTimeout(()=>chosen.style.outline="",1800);
+});
+
+$("load").addEventListener("click",async()=>{
+  const id=playlistId($("playlist").value);
+  if(!id){$("status").textContent="Nie rozpoznaję ID playlisty. Wklej pełny adres /playlist/... lub samo UUID.";return;}
+  const button=$("load");button.disabled=true;
+  $("summary").classList.add("hidden");$("status").textContent="Łączę z publicznym API Suno…";
+  allSongs=[];counts={};let total=0;let pages=0;let title="";
+  const maxPages=Number($("maxPages").value)||2;
+  try{
+    for(let page=1;page<=maxPages;page++){
+      $("status").textContent=`Pobieram stronę ${page}/${maxPages}…`;
+      const res=await fetch(`${W}/playlist?id=${encodeURIComponent(id)}&page=${page}`);
+      const txt=await res.text();let data;
+      try{data=JSON.parse(txt)}catch{throw new Error(`Niepoprawna odpowiedź Workera (HTTP ${res.status}).`)}
+      if(!res.ok||!data.ok)throw new Error(data.error||`Błąd HTTP ${res.status}`);
+      pages++;total=data.total||total;title=data.playlist_name||title;
+      const rows=(data.results||[]).map(classify);
+      if(!rows.length)break;
+      for(const s of rows){
+        const k=s._version.excluded?"excluded":s._version.key;
+        counts[k]=(counts[k]||0)+1;
+        if(!s._version.excluded)allSongs.push(s);
+      }
+      if(data.received<50 || (total&&page*50>=total))break;
+    }
+    $("summary").classList.remove("hidden");
+    $("playlistTitle").textContent=title||"Wyniki playlisty";
+    $("playlistMeta").textContent=`ID: ${id} · pobrano ${pages} stron · ${allSongs.length+(counts.excluded||0)} rekordów`;
+    $("versionNote").textContent="EXPLORER 8.5 · kolejka i oficjalny odtwarzacz Suno";
+    renderStats();setVersion("all");
+    $("status").textContent=`Gotowe. Odczytano ${allSongs.length+(counts.excluded||0)} rekordów; ${counts.unknown||0} bez potwierdzonej wersji pozostawiono w osobnej kategorii. v6+ wykluczono.`;
+  }catch(err){$("status").textContent="Błąd: "+err.message;}
+  finally{button.disabled=false;}
+});
+</script>
+</body>
+</html>
