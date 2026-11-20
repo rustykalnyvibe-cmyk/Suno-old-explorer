@@ -1,5 +1,5 @@
 const SUNO_API = "https://studio-api-prod.suno.com/api/playlist/";
-const VERSION = "explorer-8";
+const VERSION = "explorer-8.1";
 const MAX_PAGE = 50;
 
 function json(data, status = 200) {
@@ -48,7 +48,7 @@ function extract(item) {
     history: first(md.history, c.history, null),
     created_at: first(c.created_at, ""),
     duration: first(md.duration, c.duration, null),
-    audio_url: first(c.audio_url, audio.url, ""),
+    audio_url: first(audio.url, c.audio_url && !/\/api\/forbidden(?:\?|$)/i.test(c.audio_url) ? c.audio_url : "", ""),
     image_url: first(c.image_url, ""),
     handle: first(c.handle, creator.handle, ""),
     display_name: first(c.display_name, creator.display_name, creator.name, ""),

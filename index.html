@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Suno Old Explorer — Explorer 8</title>
+<title>Suno Old Explorer — Explorer 8.1</title>
 <style>
 :root{color-scheme:dark}
 *{box-sizing:border-box}
@@ -57,7 +57,7 @@ hr{border:0;border-top:1px solid #363a44;margin:16px 0}
     <h1>🎧 Suno Old Explorer</h1>
     <p style="margin:5px 0 0">Archiwum publicznych playlist i separacja generacji modeli Suno.</p>
   </div>
-  <div class="version">EXPLORER 8 · WERSJA TESTOWA</div>
+  <div class="version">EXPLORER 8.1 · WERSJA TESTOWA</div>
 </header>
 
 <section class="card">
@@ -116,8 +116,8 @@ hr{border:0;border-top:1px solid #363a44;margin:16px 0}
 </section>
 
 <section class="card">
-  <b>Reguły archiwum — Explorer 8</b>
-  <p class="muted">Oddzielne kategorie: v3, v3.5, v4, v4.5, v4.5+, warianty Pro rozpoznane jawnie oraz v5. Wersje v6 i nowsze są odrzucane. Nie zgadujemy oznaczeń Pro na podstawie samej nazwy technicznej modelu.</p>
+  <b>Reguły archiwum — Explorer 8.1</b>
+  <p class="muted">Oddzielne kategorie: v3, v3.5, v4, v4.5, v4.5+, warianty Pro rozpoznane jawnie oraz v5. Rekordy bez major_model_version są odseparowane jako nieustalone. Wersje v6 i nowsze są odrzucane. Nie zgadujemy oznaczeń Pro na podstawie samej nazwy technicznej modelu.</p>
   <p class="muted">Informacje o coverach i pochodzeniu pokazujemy tylko wtedy, gdy API faktycznie je zwraca. Puste pole nie oznacza, że utwór na pewno nie jest coverem.</p>
   <a id="health" href="#" target="_blank" rel="noopener">Sprawdź status Workera</a>
 </section>
@@ -136,8 +136,8 @@ function esc(v){
 }
 function getVersion(s){
   const raw=String(s.major_model_version||"").trim().toLowerCase().replace(/\s+/g," ");
-  const model=String(s.model_name||"").trim().toLowerCase();
-  const v=raw || model;
+  // Nie wyprowadzamy wersji z model_name: np. chirp-v3 występował przy major_model_version v3.5.
+  const v=raw;
   const n=v.match(/(?:^|[^a-z])v?(\d+)(?:\.(\d+))?/i);
   if(!n) return {key:"unknown",label:"Nieznana",excluded:false,raw};
   const major=Number(n[1]), minor=n[2]===undefined?null:Number(n[2]);
@@ -163,9 +163,9 @@ function classify(song){
 }
 function renderStats(){
   const order=["v3","v3.5","v4","v4.5","v4.5+","v4.5pro","v4.5+pro","v4.5-all","v5","unknown","excluded"];
-  const labels={"v3":"v3","v3.5":"v3.5","v4":"v4","v4.5":"v4.5","v4.5+":"v4.5+","v4.5pro":"v4.5 Pro","v4.5+pro":"v4.5+ Pro","v4.5-all":"v4.5-all","v5":"v5","unknown":"Nieznana","excluded":"Odrzucone v6+"};
+  const labels={"v3":"v3","v3.5":"v3.5","v4":"v4","v4.5":"v4.5","v4.5+":"v4.5+","v4.5pro":"v4.5 Pro","v4.5+pro":"v4.5+ Pro","v4.5-all":"v4.5-all","v5":"v5","unknown":"Nieustalona — osobno","excluded":"Odrzucone v6+"};
   $("stats").innerHTML=order.filter(k=>counts[k]).map(k=>`<div class="stat"><b>${counts[k]}</b><span>${labels[k]}</span></div>`).join("");
-  const opts=[["all","Wszystkie obsługiwane wersje"],...order.filter(k=>k!=="excluded"&&counts[k]).map(k=>[k,labels[k]])];
+  const opts=[["all","Wszystkie rozpoznane wersje"],...order.filter(k=>k!=="excluded"&&counts[k]).map(k=>[k,labels[k]])];
   $("versionFilter").innerHTML=opts.map(([v,l])=>`<option value="${esc(v)}">${esc(l)}</option>`).join("");
   $("versionPills").innerHTML=opts.map(([v,l])=>`<button class="pill ${v==="all"?"active":""}" data-version="${esc(v)}">${esc(l)}</button>`).join("");
   $("versionPills").querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>setVersion(b.dataset.version)));
@@ -185,6 +185,7 @@ function renderResults(){
   const expWords=["experimental","turntablism","avant-garde","abstract","weird","crazy","mystic","psychedelic","surreal","unconventional","glitch","idm","leftfield","breakcore","noise","industrial","deconstructed","microtonal","atonal","dissonant","genre-bending","sound collage"];
   const filtered=allSongs.filter(s=>{
     if(s._version.excluded) return false;
+    if(selectedVersion==="all"&&s._version.key==="unknown")return false;
     if(selectedVersion!=="all"&&s._version.key!==selectedVersion)return false;
     const hay=[s.title,s.tags,s.prompt,s.handle,s.display_name,s.model_name,s.task].join(" ").toLowerCase();
     if(q&&!hay.includes(q))return false;
@@ -197,7 +198,11 @@ function renderResults(){
     return true;
   });
   if(expMode==="boost")filtered.sort((a,b)=>(b._expHits||0)-(a._expHits||0));
-  $("resultCount").textContent=`Wyświetlono ${filtered.length} z ${allSongs.filter(s=>!s._version.excluded).length} obsługiwanych utworów.`;
+  const knownCount=allSongs.filter(s=>!s._version.excluded&&s._version.key!=="unknown").length;
+  const unknownCount=counts.unknown||0;
+  $("resultCount").textContent=selectedVersion==="unknown"
+    ? `Wyświetlono ${filtered.length} utworów z nieustaloną wersją — poza głównym archiwum modeli.`
+    : `Wyświetlono ${filtered.length} z ${knownCount} rozpoznanych utworów. ${unknownCount} z nieustaloną wersją odseparowano.`;
   $("results").innerHTML=filtered.map(s=>{
     const origin=s.cover_clip_id?`<div class="muted">ID oryginału/coveru: ${esc(s.cover_clip_id)}</div>`:"";
     const remix=s.is_remix===true?"TAK":s.is_remix===false?"NIE":"brak danych";
@@ -256,9 +261,9 @@ $("load").addEventListener("click",async()=>{
     $("summary").classList.remove("hidden");
     $("playlistTitle").textContent=title||"Wyniki playlisty";
     $("playlistMeta").textContent=`ID: ${id} · pobrano ${pages} stron · ${allSongs.length+(counts.excluded||0)} rekordów`;
-    $("versionNote").textContent="EXPLORER 8 · separacja modeli";
+    $("versionNote").textContent="EXPLORER 8.1 · separacja modeli";
     renderStats();setVersion("all");
-    $("status").textContent=`Gotowe. Odczytano ${allSongs.length+(counts.excluded||0)} utworów. Wersje v6+ zostały wykluczone.`;
+    $("status").textContent=`Gotowe. Odczytano ${allSongs.length+(counts.excluded||0)} rekordów; ${counts.unknown||0} bez potwierdzonej wersji pozostawiono w osobnej kategorii. v6+ wykluczono.`;
   }catch(err){$("status").textContent="Błąd: "+err.message;}
   finally{button.disabled=false;}
 });
