@@ -1,7 +1,5 @@
 
-const DATASET = "https://huggingface.co/datasets/sleeping-ai/Suno-Public-Playlist-small-audio/resolve/main/suno_music.txt?download=true";
-
-const API = "https://studio-api.prod.suno.com/api/clip/";
+const SUNO_FEED = "https://suno.com/a/api/unified/feed";
 
 const EXP = [
   "experimental", "turntablism", "avant-garde", "avant garde",
@@ -54,11 +52,8 @@ function first(...values) {
   return null;
 }
 
-// Odczyt wersji wyłącznie z jawnych danych API.
-// Nie zgadujemy wersji na podstawie nazwy chirp.
 function modelLabel(d) {
   const md = d?.metadata || {};
-
   return String(first(
     d?.major_model_version,
     d?.model_version,
@@ -67,8 +62,6 @@ function modelLabel(d) {
   ) || "").toLowerCase().trim();
 }
 
-// Zakres obsługiwanych generacji: V3 – V4.5+.
-// V5 i V6 pozostają poza zakresem.
 function ver(value, wanted) {
   const x = norm(value).replace(/\s+/g, "");
   const w = norm(wanted).replace(/\s+/g, "");
@@ -80,34 +73,22 @@ function ver(value, wanted) {
   const isV4 = x.startsWith("v4") && !x.startsWith("v4.5");
   const isV45 = x.startsWith("v4.5");
 
-  // Wszystkie starsze generacje od V3 do V4.5+
   if (["all", "old", "v3-v4.5", "v3-v4.5+"].includes(w)) {
     return isV3 || isV35 || isV4 || isV45;
   }
 
-  // V3
   if (w === "v3") return isV3;
-
-  // V3.5
   if (w === "v3.5") return isV35;
 
-  // V3 oraz V3.5
   if (w === "v3both" || w === "v3+v3.5") {
     return isV3 || isV35;
   }
 
-  // V4
   if (w === "v4") return isV4;
-
-  // V4.5
-  if (w === "v4.5") return isV45;
-
-  // V4.5 i warianty oznaczone jako V4.5+
-  if (w === "v4.5+" || w === "v4.5plus") {
+  if (w === "v4.5" || w === "v4.5+" || w === "v4.5plus") {
     return isV45;
   }
 
-  // V4 oraz V4.5
   if (w === "both" || w === "v4both" || w === "v4+v4.5") {
     return isV4 || isV45;
   }
@@ -122,100 +103,68 @@ function expscore(text) {
   );
 }
 
-// Odczyt metadanych z API Suno.
-function extract(d, id) {
-  const md = d?.metadata || {};
-  const persona = first(d?.persona, md.persona) || {};
-  const voice = first(d?.voice, md.voice) || {};
+function extract(item) {
+  const d = item?.content_item || item || {};
+  const md = d.metadata || {};
 
-  const tags = first(md.tags, d.tags) || "";
-  const displayTags = first(d.display_tags, md.display_tags) || "";
+  const persona = first(d.persona, md.persona) || {};
+  const voice = first(d.voice, md.voice) || {};
+  const media = Array.isArray(d.media_urls) ? d.media_urls : [];
 
-  const prompt = first(
-    md.gpt_description_prompt,
-    d.gpt_description_prompt,
-    md.prompt,
-    d.prompt
-  ) || "";
+  const audio = media.find(x =>
+    /audio|m4a|mp3|opus/i.test(String(x?.content_type || x?.url || ""))
+  ) || media[0] || {};
 
-  const description = first(
-    md.description,
-    d.description
-  ) || "";
+  const user = first(d.user, d.creator, d.owner) || {};
 
   return {
-    id: d?.id || id,
-
+    id: first(d.id, item?.content_id) || "",
     model_version: modelLabel(d),
     model_name: first(d.model_name, md.model_name) || "",
 
     title: first(d.title, md.title) || "",
-    handle: d.handle || "",
-    display_name: d.display_name || "",
+    handle: first(d.handle, user.handle) || "",
+    display_name: first(d.display_name, user.display_name, user.name) || "",
 
-    tags,
-    display_tags: displayTags,
-    prompt,
-    description,
-
+    tags: first(md.tags, d.tags) || "",
+    display_tags: first(d.display_tags, md.display_tags) || "",
+    prompt: first(
+      md.gpt_description_prompt,
+      d.gpt_description_prompt,
+      md.prompt,
+      d.prompt
+    ) || "",
+    description: first(md.description, d.description) || "",
     negative_tags: first(md.negative_tags, d.negative_tags) || "",
 
     created_at: d.created_at || "",
-    audio_url: first(d.audio_url, md.audio_url) || "",
+    audio_url: first(d.audio_url, md.audio_url, audio.url) || "",
 
     has_vocal: first(d.has_vocal, md.has_vocal),
-
     can_remix: first(d.can_remix, md.can_remix),
     can_download_remix: first(d.can_download_remix, md.can_download_remix),
     is_remix: first(d.is_remix, md.is_remix),
-
-    is_public: d.is_public ?? null,
+    is_public: first(d.is_public, md.is_public),
 
     clip_type: first(md.type, d.type),
     source_type: first(
-      d.source_type,
-      d.clip_type,
-      d.type,
-      md.source_type,
-      md.clip_type,
-      md.type
+      d.source_type, d.clip_type, d.type,
+      md.source_type, md.clip_type, md.type
     ),
 
-    voice_id: first(
-      d.voice_id,
-      md.voice_id,
-      voice.id,
-      voice.voice_id
-    ),
-
-    voice_name: first(
-      d.voice_name,
-      md.voice_name,
-      voice.name,
-      voice.voice_name
-    ),
-
-    persona_id: first(
-      d.persona_id,
-      md.persona_id,
-      persona.id,
-      persona.persona_id
-    ),
-
+    task: first(md.task, d.task) || "",
+    voice_id: first(d.voice_id, md.voice_id, voice.id, voice.voice_id),
+    voice_name: first(d.voice_name, md.voice_name, voice.name, voice.voice_name),
+    persona_id: first(d.persona_id, md.persona_id, persona.id, persona.persona_id),
     persona_name: first(
-      d.persona_name,
-      md.persona_name,
-      persona.name,
-      persona.persona_name
+      d.persona_name, md.persona_name, persona.name, persona.persona_name
     ),
 
-    source_clips: first(d.source_clips, md.source_clips)
+    source_clips: first(d.source_clips, md.source_clips),
+    raw_api: d
   };
 }
 
-// Pola wyszukiwania obejmuje teraz także opisy i prompty.
-// Nie przeszukujemy negative_tags, żeby nie dopasowywać
-// utworów na podstawie tego, czego autor nie chciał.
 function searchable(d) {
   return norm([
     d.tags,
@@ -223,11 +172,16 @@ function searchable(d) {
     d.title,
     d.model_name,
     d.prompt,
-    d.description
+    d.description,
+    d.task
   ].filter(Boolean).join(" "));
 }
 
-function score(d, styleTerms, excluded, matchMode, experimentalMode) {
+function score(d, styleTerms, excluded, matchMode, experimentalMode, wanted) {
+  if (!d.model_version || !ver(d.model_version, wanted)) {
+    return null;
+  }
+
   const h = searchable(d);
 
   if (excluded.some(term => h.includes(term))) {
@@ -236,7 +190,6 @@ function score(d, styleTerms, excluded, matchMode, experimentalMode) {
 
   const hits = styleTerms.filter(term => h.includes(term)).length;
 
-  // Pierwszy wpisany termin jest głównym filtrem.
   if (styleTerms.length && !h.includes(styleTerms[0])) {
     return null;
   }
@@ -272,102 +225,46 @@ function score(d, styleTerms, excluded, matchMode, experimentalMode) {
   };
 }
 
-// Pobieranie listy ID z datasetu.
-async function ids() {
-  const key = new Request("https://cache.local/suno-ids");
+async function searchSuno(term, cursor, pageSize) {
+  const payload = {
+    feed_id: "omnisearch_songs",
+    cursor: cursor || null,
+    page_size: pageSize,
+    request_metadata: {
+      term
+    }
+  };
 
-  const cached = await caches.default.match(key);
-
-  if (cached) {
-    return cached.json();
-  }
-
-  const response = await fetch(DATASET, {
-    cf: { cacheTtl: 86400 }
+  const response = await fetch(SUNO_FEED, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      "accept": "application/json",
+      "user-agent": "Mozilla/5.0",
+      "origin": "https://suno.com",
+      "referer": "https://suno.com/"
+    },
+    body: JSON.stringify(payload)
   });
 
-  if (!response.ok) {
-    throw Error("Nie można pobrać listy ID.");
-  }
+  const text = await response.text();
 
-  const body = await response.text();
-
-  const found = [
-    ...body.matchAll(
-      /https:\/\/cdn1\.suno\.ai\/([0-9a-f-]{36})\.mp3/gi
-    )
-  ].map(match => match[1]);
-
-  const unique = [...new Set(found)];
-
-  if (!unique.length) {
-    throw Error("Lista ID jest pusta albo zmienił się format datasetu.");
-  }
-
-  await caches.default.put(
-    key,
-    new Response(JSON.stringify(unique), {
-      headers: { "content-type": "application/json" }
-    })
-  );
-
-  return unique;
-}
-
-// Pobieranie pojedynczego utworu.
-async function clip(id) {
+  let data;
   try {
-    const response = await fetch(API + id, {
-      headers: {
-        "user-agent": "Mozilla/5.0"
-      },
-      cf: {
-        cacheTtl: 3600,
-        cacheEverything: true
-      }
-    });
-
-    if (!response.ok) {
-      return {
-        ok: false,
-        reason: "http_" + response.status
-      };
-    }
-
-    const data = await response.json();
-
-    if (data.status !== "complete") {
-      return {
-        ok: false,
-        reason: "not_complete"
-      };
-    }
-
-    return {
-      ok: true,
-      data: extract(data, id)
-    };
-
-  } catch (error) {
-    return {
-      ok: false,
-      reason: "fetch_error",
-      message: String(error.message || error)
-    };
-  }
-}
-
-function sampleIds(all, count) {
-  const pool = [...all];
-  const selected = [];
-
-  while (selected.length < Math.min(count, pool.length)) {
-    const index = Math.floor(Math.random() * pool.length);
-    selected.push(pool[index]);
-    pool.splice(index, 1);
+    data = JSON.parse(text);
+  } catch {
+    throw new Error(
+      `Suno zwróciło nie-JSON (HTTP ${response.status}): ${text.slice(0, 500)}`
+    );
   }
 
-  return selected;
+  if (!response.ok) {
+    throw new Error(
+      `Suno API HTTP ${response.status}: ${JSON.stringify(data).slice(0, 700)}`
+    );
+  }
+
+  return data;
 }
 
 export default {
@@ -381,92 +278,34 @@ export default {
     if (url.pathname === "/health") {
       return cors({
         ok: true,
-        version: "explorer-5",
+        version: "explorer-6",
+        source: "Suno omnisearch_songs",
         message: "Worker działa."
       });
     }
 
-    if (url.pathname === "/debug") {
-      const id = url.searchParams.get("id");
-
-      if (!id || !/^[0-9a-f-]{36}$/i.test(id)) {
-        return cors({
-          ok: false,
-          error: "Podaj prawidłowe ID UUID."
-        }, 400);
-      }
-
-      try {
-        const response = await fetch(API + id, {
-          headers: {
-            "user-agent": "Mozilla/5.0"
-          },
-          cf: {
-            cacheTtl: 3600,
-            cacheEverything: true
-          }
-        });
-
-        const body = await response.text();
-
-        let api;
-
-        try {
-          api = JSON.parse(body);
-        } catch {
-          api = { raw: body };
-        }
-
-        return cors({
-          ok: response.ok,
-          http_status: response.status,
-          id,
-          api
-        }, response.ok ? 200 : 502);
-
-      } catch (error) {
-        return cors({
-          ok: false,
-          error: String(error.message || error)
-        }, 500);
-      }
-    }
-
     if (url.pathname === "/stats") {
-      try {
-        const all = await ids();
-
-        return cors({
-          ok: true,
-          dataset_ids: all.length,
-          message: "Lista ID została pobrana."
-        });
-
-      } catch (error) {
-        return cors({
-          ok: false,
-          error: String(error.message || error)
-        }, 500);
-      }
+      return cors({
+        ok: true,
+        source: "Suno omnisearch_songs",
+        dataset: "Hugging Face nie jest już używany."
+      });
     }
 
-    if (url.pathname !== "/random") {
-      return cors({
-        ok: false,
-        error: "Not found"
-      }, 404);
+    if (url.pathname !== "/search" && url.pathname !== "/random") {
+      return cors({ ok: false, error: "Not found" }, 404);
     }
 
     try {
-      const wanted = url.searchParams.get("model") || "both";
+      const term = (url.searchParams.get("term") || "experimental").trim();
+      const cursor = url.searchParams.get("cursor") || null;
 
-      // Limit 20 pozostaje celowy: chroni przed limitem
-      // podzapytań Cloudflare podczas jednego wywołania.
-      const count = Math.min(
-        Math.max(Number(url.searchParams.get("tries")) || 20, 1),
+      const pageSize = Math.min(
+        Math.max(Number(url.searchParams.get("page_size")) || 20, 1),
         20
       );
 
+      const wanted = url.searchParams.get("model") || "both";
       const styleTerms = terms(url.searchParams.get("style"));
       const excluded = terms(url.searchParams.get("exclude"));
 
@@ -474,107 +313,83 @@ export default {
         url.searchParams.get("match") === "any" ? "any" : "all";
 
       const experimentalMode = [
-        "normal",
-        "boost",
-        "only"
+        "normal", "boost", "only"
       ].includes(url.searchParams.get("experimental"))
         ? url.searchParams.get("experimental")
         : "normal";
 
-      const all = await ids();
-      const sample = sampleIds(all, count);
+      if (!term) {
+        return cors({
+          ok: false,
+          error: "Wpisz frazę wyszukiwania Suno."
+        }, 400);
+      }
 
-      const matches = [];
+      const api = await searchSuno(term, cursor, pageSize);
+      const feed = api?.feed || {};
+      const items = Array.isArray(feed.items) ? feed.items : [];
 
       const stats = {
-        sampled: sample.length,
-        complete: 0,
-        incomplete: 0,
-        http_errors: 0,
-        fetch_errors: 0,
+        received: items.length,
         model_missing: 0,
         model_mismatch: 0,
         matched: 0,
         model_versions: {}
       };
 
-      // Maksymalnie 5 równoległych zapytań do API Suno.
-      for (let i = 0; i < sample.length; i += 5) {
-        const batch = await Promise.all(
-          sample.slice(i, i + 5).map(clip)
+      const matches = [];
+
+      for (const item of items) {
+        const d = extract(item);
+        const model = d.model_version || "unknown";
+
+        stats.model_versions[model] =
+          (stats.model_versions[model] || 0) + 1;
+
+        if (!d.model_version) {
+          stats.model_missing++;
+          continue;
+        }
+
+        if (!ver(d.model_version, wanted)) {
+          stats.model_mismatch++;
+          continue;
+        }
+
+        const result = score(
+          d,
+          styleTerms,
+          excluded,
+          matchMode,
+          experimentalMode,
+          wanted
         );
 
-        for (const item of batch) {
-          if (!item.ok) {
-            if (item.reason === "not_complete") {
-              stats.incomplete++;
-            } else if (item.reason?.startsWith("http_")) {
-              stats.http_errors++;
-            } else {
-              stats.fetch_errors++;
-            }
-
-            continue;
-          }
-
-          stats.complete++;
-
-          const data = item.data;
-          const model = data.model_version || "unknown";
-
-          stats.model_versions[model] =
-            (stats.model_versions[model] || 0) + 1;
-
-          if (!data.model_version) {
-            stats.model_missing++;
-            continue;
-          }
-
-          if (!ver(data.model_version, wanted)) {
-            stats.model_mismatch++;
-            continue;
-          }
-
-          const result = score(
-            data,
-            styleTerms,
-            excluded,
-            matchMode,
-            experimentalMode
-          );
-
-          if (result) {
-            matches.push(result);
-            stats.matched++;
-          }
+        if (result) {
+          matches.push(result);
+          stats.matched++;
         }
       }
 
-      if (!matches.length) {
-        return cors({
-          ok: false,
-          checked: sample.length,
-          stats,
-          error: "Nie znaleziono pasującego utworu."
-        }, 404);
-      }
-
-      matches.sort(
-        (a, b) => b.match_score - a.match_score
-      );
+      matches.sort((a, b) => b.match_score - a.match_score);
 
       return cors({
         ok: true,
-        checked: sample.length,
+        term,
+        feed_title: feed.feed_title || "",
+        checked: items.length,
+        next_cursor: feed.next_cursor || null,
+        has_more: Boolean(feed.next_cursor),
         stats,
-        results: matches.slice(0, 10)
+        results: matches,
+        raw_count: items.length
       });
 
     } catch (error) {
       return cors({
         ok: false,
         error: String(error.message || error)
-      }, 500);
+      }, 502);
     }
   }
 };
