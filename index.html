@@ -5,199 +5,62 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Suno Old Explorer</title>
-
 <style>
 :root{color-scheme:dark}
 *{box-sizing:border-box}
-
-body{
-  font-family:system-ui;
-  background:#111;
-  color:#eee;
-  margin:0;
-  padding:24px
-}
-
+body{font-family:system-ui;background:#111;color:#eee;margin:0;padding:24px}
 main{max-width:820px;margin:auto}
-
-.card{
-  background:#1b1b1b;
-  border:1px solid #333;
-  border-radius:18px;
-  padding:20px;
-  margin-top:18px
-}
-
+.card{background:#1b1b1b;border:1px solid #333;border-radius:18px;padding:20px;margin-top:18px}
 h1{margin:0 0 6px}
 p{color:#aaa}
-
-label,.section{
-  display:block;
-  color:#999;
-  font-size:12px;
-  margin:12px 0 6px;
-  text-transform:uppercase
-}
-
-input,select,button{
-  font:inherit;
-  border-radius:12px;
-  border:1px solid #555;
-  background:#252525;
-  color:#fff;
-  padding:12px 14px
-}
-
+label,.section{display:block;color:#999;font-size:12px;margin:12px 0 6px;text-transform:uppercase}
+input,select,button{font:inherit;border-radius:12px;border:1px solid #555;background:#252525;color:#fff;padding:12px 14px}
 input{width:100%}
 button{cursor:pointer}
 button:hover{background:#333}
 button:disabled{opacity:.5;cursor:wait}
-
-.primary{
-  width:100%;
-  font-size:20px;
-  margin:16px 0 10px
-}
-
-.row{
-  display:flex;
-  gap:10px;
-  flex-wrap:wrap
-}
-
-.row>*{
-  flex:1;
-  min-width:160px
-}
-
-.chips{
-  display:flex;
-  flex-wrap:wrap;
-  gap:7px
-}
-
-.chip{
-  font-size:12px;
-  padding:8px 10px
-}
-
-.small{
-  font-size:12px;
-  color:#888
-}
-
-.status{
-  min-height:24px;
-  color:#bbb;
-  line-height:1.5
-}
-
-.badge{
-  display:inline-block;
-  padding:4px 9px;
-  border-radius:999px;
-  background:#333;
-  margin:0 6px 6px 0;
-  font-size:12px
-}
-
-.title{
-  font-size:23px;
-  font-weight:700;
-  margin-top:8px
-}
-
+.primary{width:100%;font-size:20px;margin:16px 0 10px}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.row>*{flex:1;min-width:160px}
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip{font-size:12px;padding:8px 10px}
+.small{font-size:12px;color:#888}
+.status{min-height:24px;color:#bbb;line-height:1.5}
+.badge{display:inline-block;padding:4px 9px;border-radius:999px;background:#333;margin:0 6px 6px 0;font-size:12px}
+.title{font-size:23px;font-weight:700;margin-top:8px}
 .user{color:#aaa}
-
-.meta{
-  margin-top:16px;
-  line-height:1.7
-}
-
+.meta{margin-top:16px;line-height:1.7}
 a{color:#8ec5ff}
-
-.data-grid{
-  display:grid;
-  grid-template-columns:150px 1fr;
-  gap:8px 12px;
-  margin-top:18px
-}
-
-.data-grid div:nth-child(odd){
-  color:#999
-}
-
-.mono{
-  font-family:ui-monospace,monospace;
-  word-break:break-word
-}
-
-pre{
-  white-space:pre-wrap;
-  word-break:break-word;
-  background:#111;
-  border:1px solid #333;
-  padding:12px;
-  border-radius:10px;
-  max-height:520px;
-  overflow:auto
-}
-
+.data-grid{display:grid;grid-template-columns:150px 1fr;gap:8px 12px;margin-top:18px}
+.data-grid div:nth-child(odd){color:#999}
+.mono{font-family:ui-monospace,monospace;word-break:break-word}
+pre{white-space:pre-wrap;word-break:break-word;background:#111;border:1px solid #333;padding:12px;border-radius:10px;max-height:520px;overflow:auto}
 details{margin-top:18px}
-
-.stats{
-  display:flex;
-  flex-wrap:wrap;
-  gap:7px;
-  margin-top:12px
-}
-
-.stat{
-  background:#252525;
-  border:1px solid #383838;
-  padding:7px 10px;
-  border-radius:9px;
-  font-size:12px;
-  color:#aaa
-}
-
-.stat strong{
-  color:#fff;
-  margin-left:4px
-}
-
-.diag-title{
-  font-size:17px;
-  font-weight:700;
-  margin-bottom:8px
-}
-
+.stats{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}
+.stat{background:#252525;border:1px solid #383838;padding:7px 10px;border-radius:9px;font-size:12px;color:#aaa}
+.stat strong{color:#fff;margin-left:4px}
+.diag-title{font-size:17px;font-weight:700;margin-bottom:8px}
 @media(max-width:520px){
-  body{padding:12px}
-  .card{padding:15px}
-  .data-grid{grid-template-columns:110px 1fr}
-  .title{font-size:20px}
+body{padding:12px}.card{padding:15px}
+.data-grid{grid-template-columns:110px 1fr}
+.title{font-size:20px}
 }
 </style>
 </head>
-
 <body>
 <main>
 
 <h1>🎲 Suno Old Explorer</h1>
-
-<p>
-Losowe publiczne utwory z dawnych generacji Suno —
-z filtrem stylu i eksperymentalnego DNA.
-</p>
+<p>Odkrywaj publiczne utwory Suno z dawnych generacji — od V3 do V4.5, z filtrem stylu i eksperymentalnego DNA.</p>
 
 <div class="card">
 
-<div class="row">
+<label>Fraza wyszukiwania Suno</label>
+<input id="term" value="experimental" placeholder="np. experimental, turntablism, mystic">
 
+<div class="row">
 <div>
 <label>Wersja</label>
-
 <select id="model">
 <option value="both">V4 + V4.5</option>
 <option value="v4">Tylko V4</option>
@@ -205,32 +68,23 @@ z filtrem stylu i eksperymentalnego DNA.
 <option value="v3both">V3 + V3.5</option>
 <option value="v3">Tylko V3</option>
 <option value="v3.5">Tylko V3.5</option>
+<option value="all">Wszystkie V3–V4.5</option>
 </select>
 </div>
-
 <div>
-<label>Liczba prób</label>
-
+<label>Liczba wyników do sprawdzenia</label>
 <select id="tries">
 <option>20</option>
 <option selected>40</option>
 <option>60</option>
 </select>
 </div>
-
 </div>
 
-<label>
-Styl / tagi — pierwszy termin jest głównym filtrem
-</label>
-
-<input
-id="style"
-placeholder="np. trance, melodic, female vocal"
->
+<label>Styl / tagi — pierwszy termin jest głównym filtrem</label>
+<input id="style" placeholder="np. trance, melodic, female vocal">
 
 <label>Szybki styl</label>
-
 <div class="chips">
 <button type="button" class="chip" data-add="trance">Trance</button>
 <button type="button" class="chip" data-add="rap">Rap</button>
@@ -245,7 +99,6 @@ placeholder="np. trance, melodic, female vocal"
 </div>
 
 <label>Eksperymentalne DNA</label>
-
 <div class="chips">
 <button type="button" class="chip" data-add="experimental">experimental</button>
 <button type="button" class="chip" data-add="turntablism">turntablism</button>
@@ -264,7 +117,6 @@ placeholder="np. trance, melodic, female vocal"
 </div>
 
 <label>Historia / kultowe tagi</label>
-
 <div class="chips">
 <button type="button" class="chip" data-add="MAX MODE">MAX MODE</button>
 <button type="button" class="chip" data-add="CHAOTIC">CHAOTIC</button>
@@ -272,14 +124,9 @@ placeholder="np. trance, melodic, female vocal"
 </div>
 
 <label>Wyklucz</label>
-
-<input
-id="exclude"
-placeholder="np. japanese, k-pop, anime"
->
+<input id="exclude" placeholder="np. japanese, k-pop, anime">
 
 <div class="row">
-
 <div>
 <label>Dopasowanie</label>
 <select id="match">
@@ -287,7 +134,6 @@ placeholder="np. japanese, k-pop, anime"
 <option value="any">Dowolne słowo</option>
 </select>
 </div>
-
 <div>
 <label>Tryb eksperymentalny</label>
 <select id="experimental">
@@ -296,433 +142,245 @@ placeholder="np. japanese, k-pop, anime"
 <option value="only">Tylko eksperymentalne</option>
 </select>
 </div>
-
 </div>
 
-<button class="primary" id="random">
-🎲 LOSUJ UTWÓR
-</button>
-
-<div class="status" id="status">
-Gotowe.
+<button class="primary" id="random">🎲 LOSUJ UTWÓR</button>
+<div class="status" id="status">Gotowe.</div>
 </div>
-
-</div>
-
-<!-- DIAGNOSTYKA JEST TERAZ ODDZIELONA OD KARTY WYNIKU -->
 
 <div class="card" id="diagnostics" hidden>
-
-<div class="diag-title">Diagnostyka wyszukiwania</div>
-
-<div class="small" id="diagInfo">
-Oczekiwanie na wyszukiwanie.
-</div>
-
+<div class="diag-title">Diagnostyka wyszukiwania Suno</div>
+<div class="small" id="diagInfo">Oczekiwanie na wyszukiwanie.</div>
 <div class="stats" id="stats"></div>
-
 <details open>
 <summary>Ostatnia odpowiedź serwera</summary>
 <pre id="diagRaw">Brak danych.</pre>
 </details>
-
 </div>
 
 <div class="card" id="result" hidden>
-
 <div id="badges"></div>
-
 <div class="title" id="title"></div>
-
 <div class="user" id="user"></div>
-
 <div class="meta" id="meta"></div>
-
 <div class="data-grid" id="dataGrid"></div>
-
-<p>
-<a id="song" target="_blank" rel="noopener">
-Otwórz utwór w Suno ↗
-</a>
-</p>
-
+<p><a id="song" target="_blank" rel="noopener">Otwórz utwór w Suno ↗</a></p>
 <details>
 <summary>Pełne dane API</summary>
 <pre id="raw"></pre>
 </details>
-
 </div>
 
 <div class="card small">
-
-Explorer działa na publicznych metadanych/tagach utworu;
-nie udaje analizy samego audio.
-
+Explorer korzysta z publicznych wyników wyszukiwania i metadanych Suno. Nie udaje analizy samego audio.
 <br><br>
-
-Diagnostyka API:
-
-<a id="health" target="_blank" rel="noopener">/health</a>
-<br>
-<a id="dataset" target="_blank" rel="noopener">/stats</a>
-<br>
-<span class="mono">/debug?id=ID_UTWORU</span>
-
+Status API:
+<br><a id="health" target="_blank" rel="noopener">/health</a>
+<br><span class="mono">Źródło: Suno omnisearch_songs</span>
 </div>
 
 </main>
 
 <script>
-
 const W="https://suno-old-explorer.rustykalnyvibe.workers.dev";
-
 const $=id=>document.getElementById(id);
-
 $("health").href=W+"/health";
-$("dataset").href=W+"/stats";
-
-const STAT_KEYS=[
-"sampled",
-"complete",
-"incomplete",
-"http_errors",
-"fetch_errors",
-"model_missing",
-"model_mismatch",
-"matched"
-];
 
 const STAT_LABELS={
-sampled:"Sprawdzone",
-complete:"Ukończone",
-incomplete:"Nieukończone",
-http_errors:"Błędy HTTP",
-fetch_errors:"Błędy połączenia",
+received:"Pobrane z Suno",
 model_missing:"Brak wersji modelu",
-model_mismatch:"Inna wersja",
+model_mismatch:"Inna wersja modelu",
 matched:"Dopasowane"
 };
 
 let combinedStats={};
 
 function resetStats(){
-
-combinedStats={};
-
-STAT_KEYS.forEach(key=>{
-combinedStats[key]=0;
-});
-
+combinedStats={received:0,model_missing:0,model_mismatch:0,matched:0};
 renderStats();
-
 }
 
 function renderStats(){
-
-$("stats").innerHTML=STAT_KEYS.map(key=>
-`<div class="stat">
-${esc(STAT_LABELS[key])}
-<strong>${esc(combinedStats[key]??0)}</strong>
-</div>`
+$("stats").innerHTML=Object.keys(STAT_LABELS).map(key=>
+`<div class="stat">${esc(STAT_LABELS[key])}<strong>${esc(combinedStats[key]||0)}</strong></div>`
 ).join("");
-
 }
 
 function updateStats(stats){
-
 if(!stats)return;
-
-STAT_KEYS.forEach(key=>{
-combinedStats[key]+=
-Number(stats[key]||0);
+Object.keys(combinedStats).forEach(key=>{
+combinedStats[key]+=Number(stats[key]||0);
 });
-
 renderStats();
-
 }
 
 function add(term){
-
-const values=$("style").value
-.split(",")
-.map(x=>x.trim())
-.filter(Boolean);
-
-if(!values.some(x=>x.toLowerCase()===term.toLowerCase())){
-values.push(term);
-}
-
+const values=$("style").value.split(",").map(x=>x.trim()).filter(Boolean);
+if(!values.some(x=>x.toLowerCase()===term.toLowerCase()))values.push(term);
 $("style").value=values.join(", ");
-
 }
 
 document.querySelectorAll("[data-add]").forEach(button=>{
-button.addEventListener("click",()=>{
-add(button.dataset.add);
-});
+button.addEventListener("click",()=>add(button.dataset.add));
 });
 
 function esc(value){
-
-return String(value??"").replace(
-/[&<>"']/g,
-c=>({
-"&":"&amp;",
-"<":"&lt;",
-">":"&gt;",
-'"':"&quot;",
-"'":"&#39;"
-}[c])
-);
-
+return String(value??"").replace(/[&<>"']/g,c=>({
+"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+}[c]));
 }
 
 function yesNo(value){
-
 if(value===true)return "YES";
 if(value===false)return "NO";
 return "UNKNOWN";
-
 }
 
 function show(d){
-
 $("result").hidden=false;
 
 const badges=[
-
 `MODEL: ${esc(d.model_version||"UNKNOWN")}`,
-
 `VOCAL: ${yesNo(d.has_vocal)}`,
-
 `IS REMIX: ${yesNo(d.is_remix)}`,
-
 `CAN REMIX: ${yesNo(d.can_remix)}`,
-
-`DOWNLOAD REMIX: ${yesNo(d.can_download_remix)}`,
-
+`TASK: ${esc(d.task||"UNKNOWN")}`,
 `PUBLIC: ${yesNo(d.is_public)}`
-
 ];
 
-$("badges").innerHTML=badges.map(
-x=>`<span class="badge">${x}</span>`
-).join("");
-
+$("badges").innerHTML=badges.map(x=>`<span class="badge">${x}</span>`).join("");
 $("title").textContent=d.title||"(bez tytułu)";
-
-$("user").textContent=
-d.display_name
-?`@${d.display_name}`
-:d.handle
-?`@${d.handle}`
-:"";
+$("user").textContent=d.display_name?`@${d.display_name}`:d.handle?`@${d.handle}`:"";
 
 $("meta").innerHTML=
 `<b>Styl / tagi:</b> ${esc(d.tags||"—")}
-<br>
-<b>Data:</b> ${esc(d.created_at||"—")}`;
+<br><b>Tagi wyświetlane:</b> ${esc(d.display_tags||"—")}
+<br><b>Data:</b> ${esc(d.created_at||"—")}`;
 
 const rows=[
-
 ["ID",d.id],
-
 ["Model",d.model_version],
-
 ["Nazwa modelu",d.model_name],
-
 ["Opis stylu / tagi",d.tags],
-
+["Tagi wyświetlane",d.display_tags],
+["Prompt",d.prompt],
+["Zadanie Suno",d.task],
 ["Czy to remix?",yesNo(d.is_remix)],
-
 ["Można remiksować?",yesNo(d.can_remix)],
-
 ["Można pobrać remix?",yesNo(d.can_download_remix)],
-
 ["Voice",d.voice_name||d.voice_id||"BRAK DANYCH"],
-
 ["Persona",d.persona_name||d.persona_id||"BRAK DANYCH"],
-
 ["Wokal",yesNo(d.has_vocal)],
-
 ["Publiczny",yesNo(d.is_public)],
-
 ["Typ klipu",d.clip_type],
-
 ["Źródło",d.source_type],
-
 ["Utworzono",d.created_at],
-
 ["Adres audio",d.audio_url]
-
 ];
 
-$("dataGrid").innerHTML=rows.map(
-row=>
-`<div>${esc(row[0])}</div>
-<div class="mono">${esc(row[1]??"—")}</div>`
+$("dataGrid").innerHTML=rows.map(row=>
+`<div>${esc(row[0])}</div><div class="mono">${esc(row[1]??"—")}</div>`
 ).join("");
 
-$("song").href=
-"https://suno.com/song/"+encodeURIComponent(d.id||"");
-
-$("raw").textContent=JSON.stringify(
-d.raw_api||d,
-null,
-2
-);
-
+$("song").href="https://suno.com/song/"+encodeURIComponent(d.id||"");
+$("raw").textContent=JSON.stringify(d.raw_api||d,null,2);
 }
 
 $("random").addEventListener("click",async()=>{
-
 const button=$("random");
-
 button.disabled=true;
-
 $("result").hidden=true;
 $("diagnostics").hidden=false;
-
 $("diagInfo").textContent="Rozpoczynam wyszukiwanie…";
 $("diagRaw").textContent="Oczekiwanie na odpowiedź serwera.";
-
 resetStats();
 
 try{
-
-const total=Math.min(
-Math.max(Number($("tries").value)||40,1),
-60
-);
-
-const chunk=20;
-const rounds=Math.ceil(total/chunk);
-
-let all=[];
+const total=Math.min(Math.max(Number($("tries").value)||40,20),60);
+const pages=Math.ceil(total/20);
+const all=[];
+let cursor=null;
 let checked=0;
+let pagesDone=0;
 
-for(let i=0;i<rounds;i++){
-
-const count=Math.min(chunk,total-i*chunk);
-
+for(let i=0;i<pages;i++){
 const params=new URLSearchParams({
-
+term:$("term").value.trim()||"experimental",
+page_size:"20",
 model:$("model").value,
-tries:String(count),
 style:$("style").value,
 exclude:$("exclude").value,
 match:$("match").value,
 experimental:$("experimental").value
-
 });
 
-$("status").textContent=
-`Szukam… partia ${i+1}/${rounds}`;
+if(cursor)params.set("cursor",cursor);
 
-$("diagInfo").textContent=
-`Wykonano ${i+1} z ${rounds} partii. Łącznie sprawdzono ${checked} kandydatów.`;
+$("status").textContent=`Szukam w Suno… strona ${i+1}/${pages}`;
+$("diagInfo").textContent=`Pobieram stronę ${i+1}/${pages}.`;
 
-const response=await fetch(W+"/random?"+params);
-
+const response=await fetch(W+"/search?"+params);
 const responseText=await response.text();
 
 let data;
-
 try{
 data=JSON.parse(responseText);
-}catch(parseError){
-
-$("diagRaw").textContent=
-`HTTP ${response.status}\n\nOdpowiedź nie jest poprawnym JSON:\n${responseText}`;
-
-throw Error(
-`Serwer zwrócił niepoprawną odpowiedź (HTTP ${response.status}).`
-);
-
+}catch{
+$("diagRaw").textContent=`HTTP ${response.status}\n\n${responseText}`;
+throw Error("Serwer zwrócił niepoprawną odpowiedź.");
 }
-
-checked+=Number(data.checked||0);
-
-updateStats(data.stats);
-
-$("diagInfo").textContent=
-`Partia ${i+1}/${rounds}. HTTP ${response.status}. Sprawdzono łącznie ${checked} kandydatów.`;
 
 $("diagRaw").textContent=JSON.stringify({
 http_status:response.status,
+request:{
+term:params.get("term"),
+cursor:cursor,
+page_size:20
+},
 response:data
 },null,2);
 
-if(!response.ok){
+if(!response.ok)throw Error(data.error||`Błąd HTTP ${response.status}`);
 
-throw Error(
-data.error||`Błąd serwera HTTP ${response.status}`
-);
+pagesDone++;
+checked+=Number(data.checked||0);
+updateStats(data.stats);
 
-}
+if(Array.isArray(data.results))all.push(...data.results);
 
-if(data.ok&&Array.isArray(data.results)){
-all.push(...data.results);
-}
+cursor=data.next_cursor||null;
 
+$("diagInfo").textContent=
+`Pobrano ${pagesDone} stron. Sprawdzono ${checked} utworów. Znaleziono ${all.length} dopasowań.`;
+
+if(!cursor)break;
 }
 
 if(!all.length){
-
-$("diagInfo").textContent=
-`Zakończono wyszukiwanie. Sprawdzono ${checked} kandydatów. Nie znaleziono dopasowania.`;
-
-throw Error(
-"Nie znaleziono pasującego utworu. Sprawdź statystyki diagnostyczne poniżej."
-);
-
+throw Error("Brak dopasowań. Zmień frazę, model lub poluzuj filtry.");
 }
 
-all.sort(
-(a,b)=>(b.match_score||0)-(a.match_score||0)
-);
+all.sort((a,b)=>(b.match_score||0)-(a.match_score||0));
 
 const top=all[0].match_score||0;
-
-const best=all.filter(
-x=>(x.match_score||0)===top
-);
-
-const selected=best[
-Math.floor(Math.random()*best.length)
-];
+const best=all.filter(x=>(x.match_score||0)===top);
+const selected=best[Math.floor(Math.random()*best.length)];
 
 show(selected);
 
 $("status").textContent=
-`Znaleziono utwór. Sprawdzono ${checked} kandydatów.`;
+`Znaleziono ${all.length} pasujących utworów. Przejrzano ${checked} wyników Suno.`;
 
 $("diagInfo").textContent=
-`Sukces. Sprawdzono ${checked} kandydatów. Znaleziono ${all.length} pasujących utworów.`;
+`Gotowe. Pobrano ${pagesDone} stron i sprawdzono ${checked} wyników. Dopasowania: ${all.length}.`;
 
 }catch(error){
-
 $("status").textContent="Błąd: "+error.message;
-
-$("diagInfo").textContent+=
-" Wyszukiwanie zakończone błędem.";
-
-if($("diagRaw").textContent==="Oczekiwanie na odpowiedź serwera."){
-
-$("diagRaw").textContent=
-"Błąd:\n"+error.message;
-
-}
-
+$("diagInfo").textContent+=" Wyszukiwanie zakończone błędem.";
 }finally{
-
 button.disabled=false;
-
 }
-
 });
-
 </script>
-
 </body>
 </html>
