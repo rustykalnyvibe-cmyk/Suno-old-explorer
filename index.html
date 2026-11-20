@@ -4,106 +4,683 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Suno Old Explorer</title>
+
 <style>
-:root{color-scheme:dark}*{box-sizing:border-box}body{font-family:system-ui;background:#111;color:#eee;margin:0;padding:24px}main{max-width:760px;margin:auto}.card{background:#1b1b1b;border:1px solid #333;border-radius:18px;padding:20px;margin-top:18px}h1{margin:0 0 6px}p{color:#aaa}label,.section{display:block;color:#999;font-size:12px;margin:12px 0 6px;text-transform:uppercase}input,select,button{font:inherit;border-radius:12px;border:1px solid #555;background:#252525;color:#fff;padding:12px 14px}input{width:100%}button{cursor:pointer}.primary{width:100%;font-size:20px;margin:16px 0 10px}.row{display:flex;gap:10px;flex-wrap:wrap}.row>*{flex:1;min-width:160px}.chips{display:flex;flex-wrap:wrap;gap:7px}.chip{font-size:12px;padding:8px 10px}.small{font-size:12px;color:#888}.status{min-height:24px;color:#bbb}.badge{display:inline-block;padding:4px 9px;border-radius:999px;background:#333;margin:0 6px 6px 0}.title{font-size:23px;font-weight:700;margin-top:8px}.user{color:#aaa}.meta{margin-top:16px;line-height:1.5}a{color:#8ec5ff}
+:root{color-scheme:dark}
+*{box-sizing:border-box}
+body{
+  font-family:system-ui;
+  background:#111;
+  color:#eee;
+  margin:0;
+  padding:24px
+}
+main{max-width:820px;margin:auto}
+.card{
+  background:#1b1b1b;
+  border:1px solid #333;
+  border-radius:18px;
+  padding:20px;
+  margin-top:18px
+}
+h1{margin:0 0 6px}
+p{color:#aaa}
+label,.section{
+  display:block;
+  color:#999;
+  font-size:12px;
+  margin:12px 0 6px;
+  text-transform:uppercase
+}
+input,select,button{
+  font:inherit;
+  border-radius:12px;
+  border:1px solid #555;
+  background:#252525;
+  color:#fff;
+  padding:12px 14px
+}
+input{width:100%}
+button{cursor:pointer}
+.primary{
+  width:100%;
+  font-size:20px;
+  margin:16px 0 10px
+}
+.row{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap
+}
+.row>*{
+  flex:1;
+  min-width:160px
+}
+.chips{
+  display:flex;
+  flex-wrap:wrap;
+  gap:7px
+}
+.chip{
+  font-size:12px;
+  padding:8px 10px
+}
+.small{
+  font-size:12px;
+  color:#888
+}
+.status{
+  min-height:24px;
+  color:#bbb
+}
+.badge{
+  display:inline-block;
+  padding:4px 9px;
+  border-radius:999px;
+  background:#333;
+  margin:0 6px 6px 0
+}
+.title{
+  font-size:23px;
+  font-weight:700;
+  margin-top:8px
+}
+.user{color:#aaa}
+.meta{
+  margin-top:16px;
+  line-height:1.6
+}
+a{color:#8ec5ff}
+
+.data-grid{
+  display:grid;
+  grid-template-columns:150px 1fr;
+  gap:8px 12px;
+  margin-top:18px
+}
+.data-grid div:nth-child(odd){
+  color:#999
+}
+.mono{
+  font-family:ui-monospace,monospace;
+  word-break:break-word
+}
+pre{
+  white-space:pre-wrap;
+  word-break:break-word;
+  background:#111;
+  border:1px solid #333;
+  padding:12px;
+  border-radius:10px;
+  max-height:520px;
+  overflow:auto
+}
+details{
+  margin-top:18px
+}
 </style>
 </head>
+
 <body>
 <main>
+
 <h1>🎲 Suno Old Explorer</h1>
-<p>Losowe publiczne utwory z dawnych generacji Suno — z filtrem stylu i eksperymentalnego DNA.</p>
+
+<p>
+Losowe publiczne utwory z dawnych generacji Suno —
+z filtrem stylu i eksperymentalnego DNA.
+</p>
+
 <div class="card">
+
 <div class="row">
-<div><label>Wersja</label><select id="model">
-<option value="both">V4 + V4.5</option><option value="v4">Tylko V4</option><option value="v4.5">Tylko V4.5</option>
-<option value="v3both">V3 + V3.5</option><option value="v3">Tylko V3</option><option value="v3.5">Tylko V3.5</option>
-</select></div>
-<div><label>Liczba prób</label><select id="tries">
-<option>20</option><option selected>40</option><option>60</option>
-</select></div>
+
+<div>
+<label>Wersja</label>
+
+<select id="model">
+<option value="both">V4 + V4.5</option>
+<option value="v4">Tylko V4</option>
+<option value="v4.5">Tylko V4.5</option>
+<option value="v3both">V3 + V3.5</option>
+<option value="v3">Tylko V3</option>
+<option value="v3.5">Tylko V3.5</option>
+</select>
+
 </div>
-<label>Styl / tagi — pierwszy termin jest głównym filtrem</label>
-<input id="style" placeholder="np. trance, melodic, female vocal">
-<div class="section">Popularne style</div>
+
+<div>
+
+<label>Liczba prób</label>
+
+<select id="tries">
+<option>20</option>
+<option selected>40</option>
+<option>60</option>
+</select>
+
+</div>
+
+</div>
+
+<label>
+Styl / tagi — pierwszy termin jest głównym filtrem
+</label>
+
+<input
+id="style"
+placeholder="np. trance, melodic, female vocal"
+>
+
+<label>Szybki styl</label>
+
 <div class="chips">
-<button class="chip" data-add="trance">TRANCE</button><button class="chip" data-add="rap">RAP</button><button class="chip" data-add="drum and bass">DnB</button><button class="chip" data-add="techno">TECHNO</button><button class="chip" data-add="house">HOUSE</button><button class="chip" data-add="ambient">AMBIENT</button><button class="chip" data-add="rock">ROCK</button><button class="chip" data-add="punk">PUNK</button><button class="chip" data-add="metal">METAL</button><button class="chip" data-add="jazz">JAZZ</button>
+
+<button class="chip" data-add="trance">Trance</button>
+<button class="chip" data-add="rap">Rap</button>
+<button class="chip" data-add="dnb">DnB</button>
+<button class="chip" data-add="techno">Techno</button>
+<button class="chip" data-add="house">House</button>
+<button class="chip" data-add="ambient">Ambient</button>
+<button class="chip" data-add="rock">Rock</button>
+<button class="chip" data-add="punk">Punk</button>
+<button class="chip" data-add="metal">Metal</button>
+<button class="chip" data-add="jazz">Jazz</button>
+
 </div>
-<div class="section">Experimental DNA</div>
+
+<label>Eksperymentalne DNA</label>
+
 <div class="chips">
-<button class="chip" data-add="experimental">EXPERIMENTAL</button><button class="chip" data-add="turntablism">TURNtablism</button><button class="chip" data-add="avant-garde">AVANT-GARDE</button><button class="chip" data-add="abstract">ABSTRACT</button><button class="chip" data-add="weird">WEIRD</button><button class="chip" data-add="crazy">CRAZY</button><button class="chip" data-add="mystic">MYSTIC</button><button class="chip" data-add="psychedelic">PSYCHEDELIC</button><button class="chip" data-add="surreal">SURREAL</button><button class="chip" data-add="unconventional">UNCONVENTIONAL</button><button class="chip" data-add="glitch">GLITCH</button><button class="chip" data-add="idm">IDM</button><button class="chip" data-add="leftfield">LEFTFIELD</button><button class="chip" data-add="hybrid">HYBRID</button>
+
+<button class="chip" data-add="experimental">experimental</button>
+<button class="chip" data-add="turntablism">turntablism</button>
+<button class="chip" data-add="avant-garde">avant-garde</button>
+<button class="chip" data-add="abstract">abstract</button>
+<button class="chip" data-add="weird">weird</button>
+<button class="chip" data-add="crazy">crazy</button>
+<button class="chip" data-add="mystic">mystic</button>
+<button class="chip" data-add="psychedelic">psychedelic</button>
+<button class="chip" data-add="surreal">surreal</button>
+<button class="chip" data-add="unconventional">unconventional</button>
+<button class="chip" data-add="glitch">glitch</button>
+<button class="chip" data-add="IDM">IDM</button>
+<button class="chip" data-add="leftfield">leftfield</button>
+<button class="chip" data-add="hybrid">hybrid</button>
+
 </div>
-<div class="section">History / kultowe tagi</div>
-<div class="chips"><button class="chip" data-add="MAX MODE">⚡ MAX MODE</button><button class="chip" data-add="chaotic">CHAOTIC</button><button class="chip" data-add="freestyle">FREESTYLE</button></div>
+
+<label>Historia / kultowe tagi</label>
+
+<div class="chips">
+
+<button class="chip" data-add="MAX MODE">MAX MODE</button>
+<button class="chip" data-add="CHAOTIC">CHAOTIC</button>
+<button class="chip" data-add="FREESTYLE">FREESTYLE</button>
+
+</div>
+
 <label>Wyklucz</label>
-<input id="exclude" placeholder="np. japanese, k-pop, anime">
+
+<input
+id="exclude"
+placeholder="np. japanese, k-pop, anime"
+>
+
 <div class="row">
-<div><label>Wymagania</label><select id="match"><option value="all">Wszystkie słowa</option><option value="any">Dowolne słowo</option></select></div>
-<div><label>Eksperymentalność</label><select id="experimental"><option value="normal">Normalnie</option><option value="boost">Preferuj eksperymentalne</option><option value="only">Tylko eksperymentalne</option></select></div>
+
+<div>
+
+<label>Dopasowanie</label>
+
+<select id="match">
+<option value="all">Wszystkie słowa</option>
+<option value="any">Dowolne słowo</option>
+</select>
+
 </div>
-<div class="small">„Preferuj” podbija eksperymentalne wyniki, ale nie wymaga takiego tagu. „Tylko” wymaga co najmniej jednego.</div>
-<button class="primary" id="random">🎲 LOSUJ UTWÓR</button>
-<div class="status" id="status">Gotowe.</div>
+
+<div>
+
+<label>Tryb eksperymentalny</label>
+
+<select id="experimental">
+<option value="normal">Normalny</option>
+<option value="boost">Preferuj eksperymentalne</option>
+<option value="only">Tylko eksperymentalne</option>
+</select>
+
 </div>
+
+</div>
+
+<button class="primary" id="random">
+🎲 LOSUJ UTWÓR
+</button>
+
+<div class="status" id="status">
+Gotowe.
+</div>
+
+</div>
+
+
 <div class="card" id="result" hidden>
-<span class="badge" id="version"></span><span class="badge" id="date"></span><span class="badge" id="score"></span>
-<div class="title" id="title"></div><div class="user" id="user"></div>
-<div class="meta"><b>Tagi:</b> <span id="tags"></span></div>
-<p class="small">ID: <span id="id"></span></p>
-<div class="row"><a id="suno" target="_blank"><button>Otwórz w Suno ↗</button></a><a id="audio" target="_blank"><button>▶ Audio</button></a></div>
+
+<div id="badges"></div>
+
+<div class="title" id="title"></div>
+
+<div class="user" id="user"></div>
+
+<div class="meta" id="meta"></div>
+
+<div class="data-grid" id="dataGrid"></div>
+
+<p>
+<a id="song" target="_blank" rel="noopener">
+Otwórz utwór w Suno ↗
+</a>
+</p>
+
+<details>
+
+<summary>
+Pełne dane API
+</summary>
+
+<pre id="raw"></pre>
+
+</details>
+
 </div>
-<div class="card small">Filtr działa na publicznych metadanych/tagach utworu; nie udaje analizy samego audio.</div>
+
+
+<div class="card small">
+
+Explorer działa na publicznych metadanych/tagach utworu;
+nie udaje analizy samego audio.
+
+<br><br>
+
+Tryb diagnostyczny API:
+
+<span class="mono">
+/debug?id=ID_UTWORU
+</span>
+
+</div>
+
 </main>
+
+
 <script>
-const W="https://suno-old-explorer.rustykalnyvibe.workers.dev",$=x=>document.getElementById(x);
-function add(t){let a=$("style").value.split(",").map(x=>x.trim()).filter(Boolean);if(!a.map(x=>x.toLowerCase()).includes(t.toLowerCase()))a.push(t);$("style").value=a.join(", ")}
-document.querySelectorAll("[data-add]").forEach(b=>b.onclick=()=>add(b.dataset.add));
+
+const W="https://suno-old-explorer.rustykalnyvibe.workers.dev";
+
+const $=x=>document.getElementById(x);
+
+
+function add(t){
+
+let a=$("style").value
+.split(",")
+.map(x=>x.trim())
+.filter(Boolean);
+
+if(
+!a.map(x=>x.toLowerCase())
+.includes(t.toLowerCase())
+){
+a.push(t);
+}
+
+$("style").value=a.join(", ");
+
+}
+
+
+document
+.querySelectorAll("[data-add]")
+.forEach(
+b=>b.onclick=()=>add(b.dataset.add)
+);
+
+
+function esc(s){
+
+return String(s??"")
+.replace(
+/[&<>"']/g,
+c=>({
+"&":"&amp;",
+"<":"&lt;",
+">":"&gt;",
+"\"":"&quot;",
+"'":"&#39;"
+}[c])
+);
+
+}
+
+
+function show(d){
+
+$("result").hidden=false;
+
+
+$("badges").innerHTML=
+
+`<span class="badge">
+${esc(d.model_version||"MODEL ?")}
+</span>`
+
++
+
+`<span class="badge">
+VOCAL: ${
+d.has_vocal===true
+?"YES"
+:d.has_vocal===false
+?"NO"
+:"?"
+}
+</span>`
+
++
+
+`<span class="badge">
+REMIX: ${
+d.is_remix===true
+?"YES"
+:d.is_remix===false
+?"NO"
+:"?"
+}
+</span>`
+
++
+
+`<span class="badge">
+VOICE: ${
+esc(
+d.voice_name ||
+d.voice_id ||
+"?"
+)
+}
+</span>`
+
++
+
+`<span class="badge">
+PERSONA: ${
+esc(
+d.persona_name ||
+d.persona_id ||
+"?"
+)
+}
+</span>`;
+
+
+$("title").textContent=
+d.title||"(bez tytułu)";
+
+
+$("user").textContent=
+d.display_name
+?`@${d.display_name}`
+:
+d.handle
+?`@${d.handle}`
+:
+"";
+
+
+$("meta").innerHTML=
+
+`<b>Styl / tagi:</b>
+${esc(d.tags||"—")}
+<br>
+<b>Data:</b>
+${esc(d.created_at||"—")}`;
+
+
+const rows=[
+
+["ID",d.id],
+
+["Model",d.model_version],
+
+["Opis stylu / tagi",d.tags],
+
+[
+"Remix",
+d.is_remix===true
+?"ON"
+:
+d.is_remix===false
+?"OFF"
+:
+"UNKNOWN"
+],
+
+[
+"Voice",
+d.voice_name||
+d.voice_id||
+"UNKNOWN"
+],
+
+[
+"Persona",
+d.persona_name||
+d.persona_id||
+"UNKNOWN"
+],
+
+[
+"Wokal",
+d.has_vocal===true
+?"YES"
+:
+d.has_vocal===false
+?"NO"
+:
+"UNKNOWN"
+],
+
+[
+"Źródło",
+d.source_type||
+(d.source_clips
+?"SOURCE CLIPS"
+:"UNKNOWN")
+],
+
+[
+"Utworzono",
+d.created_at
+]
+
+];
+
+
+$("dataGrid").innerHTML=
+
+rows.map(
+r=>
+`<div>${esc(r[0])}</div>
+<div class="mono">${esc(r[1]??"—")}</div>`
+).join("");
+
+
+$("song").href=
+"https://suno.com/song/"
++
+encodeURIComponent(d.id||"");
+
+
+$("raw").textContent=
+JSON.stringify(
+d.raw_api||d,
+null,
+2
+);
+
+}
+
 
 $("random").onclick=async()=>{
-  $("random").disabled=true;$("result").hidden=true;$("status").textContent="Szukam…";
-  try{
-    const total=Math.min(Math.max(+$("tries").value||40,1),60);
-    const chunk=20;
-    const rounds=Math.ceil(total/chunk);
-    let all=[],checked=0;
 
-    for(let i=0;i<rounds;i++){
-      const count=Math.min(chunk,total-i*chunk);
-      let q=new URLSearchParams({
-        model:$("model").value,tries:String(count),style:$("style").value,
-        exclude:$("exclude").value,match:$("match").value,experimental:$("experimental").value
-      });
-      $("status").textContent=`Szukam… tura ${i+1}/${rounds}`;
-      let r=await fetch(W+"/random?"+q),d=await r.json();
-      if(!r.ok||!d.ok){
-        if(d && d.checked) checked+=d.checked;
-        continue;
-      }
-      checked+=d.checked||0;
-      if(Array.isArray(d.results)) all.push(...d.results);
-      else all.push(d);
-    }
+$("random").disabled=true;
 
-    if(!all.length) throw Error("Nie znaleziono utworu spełniającego warunki. Zwiększ liczbę prób albo poluzuj filtr.");
+$("result").hidden=true;
 
-    all.sort((a,b)=>(b.match_score||0)-(a.match_score||0));
-    const topScore=all[0].match_score||0;
-    const pool=all.filter(x=>(x.match_score||0)===topScore);
-    const d=pool[Math.floor(Math.random()*pool.length)];
+$("status").textContent=
+"Szukam…";
 
-    $("version").textContent=d.model_version||"";
-    $("date").textContent=(d.created_at||"").slice(0,10);
-    $("score").textContent="dopasowanie "+(d.match_score||0);
-    $("title").textContent=d.title||"(bez tytułu)";
-    $("user").textContent=d.handle?"@"+d.handle:(d.display_name||"");
-    $("tags").textContent=d.tags||"(brak)";
-    $("id").textContent=d.id;
-    $("suno").href="https://suno.com/song/"+d.id;
-    $("audio").href=d.audio_url||"#";
-    $("result").hidden=false;
-    $("status").textContent=`Znaleziono. Sprawdzono ${checked} kandydatów.`;
-  }catch(e){$("status").textContent="Błąd: "+e.message}
-  finally{$("random").disabled=false}
+
+try{
+
+let total=
+Math.min(
+Math.max(
++$("tries").value||40,
+1
+),
+60
+);
+
+let chunk=20;
+
+let rounds=
+Math.ceil(total/chunk);
+
+let all=[];
+
+let checked=0;
+
+
+for(
+let i=0;
+i<rounds;
+i++
+){
+
+let count=
+Math.min(
+chunk,
+total-i*chunk
+);
+
+
+let q=
+new URLSearchParams({
+
+model:$("model").value,
+
+tries:count,
+
+style:$("style").value,
+
+exclude:$("exclude").value,
+
+match:$("match").value,
+
+experimental:$("experimental").value
+
+});
+
+
+let r=
+await fetch(
+W+"/random?"+q
+);
+
+let d=
+await r.json();
+
+
+checked+=d.checked||0;
+
+
+if(
+r.ok&&d.ok
+){
+
+all.push(
+...(d.results||[])
+);
+
+}
+
+}
+
+
+if(!all.length){
+
+throw Error(
+"Nie znaleziono utworu spełniającego warunki. Zwiększ liczbę prób albo poluzuj filtr."
+);
+
+}
+
+
+all.sort(
+(a,b)=>
+(b.match_score||0)-
+(a.match_score||0)
+);
+
+
+let top=
+all[0].match_score||0;
+
+
+let p=
+all.filter(
+x=>
+(x.match_score||0)===top
+);
+
+
+let pick=
+p[
+Math.floor(
+Math.random()*p.length
+)
+];
+
+
+show(pick);
+
+
+$("status").textContent=
+"Znaleziono. Sprawdzono "+
+checked+
+" kandydatów.";
+
+
+}
+
+catch(e){
+
+$("status").textContent=
+"Błąd: "+e.message;
+
+}
+
+finally{
+
+$("random").disabled=false;
+
+}
+
 };
+
 </script>
+
 </body>
 </html>
