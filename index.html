@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Suno Old Explorer — Explorer 8.2</title>
+<title>Suno Old Explorer — Explorer 8.5</title>
 <style>
 :root{color-scheme:dark}
 *{box-sizing:border-box}
@@ -46,7 +46,6 @@ button:disabled{opacity:.55;cursor:wait}
 .queue-item button{padding:7px 10px;flex:0 0 auto}
 .queue-item .queue-title{min-width:0;flex:1;overflow-wrap:anywhere}
 .player-wrap{position:sticky;bottom:8px;z-index:5;background:#171a20;border:1px solid #4a594d;border-radius:14px;padding:12px;margin-top:14px;box-shadow:0 6px 24px #0009}
-.player-wrap audio{width:100%;height:38px;margin-top:8px}
 .player-controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .player-controls button{padding:8px 12px}
 .song a{color:#91c9ff}
@@ -66,7 +65,7 @@ hr{border:0;border-top:1px solid #363a44;margin:16px 0}
     <h1>🎧 Suno Old Explorer</h1>
     <p style="margin:5px 0 0">Archiwum publicznych playlist i separacja generacji modeli Suno.</p>
   </div>
-  <div class="version">EXPLORER 8.3 · WERSJA TESTOWA</div>
+  <div class="version">EXPLORER 8.5 · WERSJA TESTOWA</div>
 </header>
 
 <section class="card">
@@ -88,7 +87,7 @@ hr{border:0;border-top:1px solid #363a44;margin:16px 0}
     </div>
   </div>
   <div class="status" id="status">Gotowe. Wklej adres publicznej playlisty.</div>
-  <div class="muted">Źródło: publiczny endpoint playlist Suno. Audio jest pobierane przez Worker; nie wymaga cookies ani tokenu.</div>
+  <div class="muted">Źródło: publiczny endpoint playlist Suno. Odtwarzanie odbywa się na oficjalnej stronie utworu w Suno.</div>
 </section>
 
 <section class="card hidden" id="summary">
@@ -124,20 +123,19 @@ hr{border:0;border-top:1px solid #363a44;margin:16px 0}
   <div class="results" id="results"></div>
   <section class="card" id="queueCard" style="margin-top:18px">
     <div class="row" style="align-items:center">
-      <div><b> kolejka odtwarzania</b><div class="muted" id="queueInfo">Kolejka utworów widocznych po zastosowaniu filtrów.</div></div>
+      <div><b> kolejka utworów</b><div class="muted" id="queueInfo">Kolejka utworów widocznych po zastosowaniu filtrów.</div></div>
       <div class="toolbar" style="justify-content:flex-end"><button id="playQueue" class="primary">▶ Odtwarzaj kolejkę</button><button id="clearQueue">Wyczyść</button></div>
     </div>
     <div class="player-wrap">
       <div class="player-controls"><button id="prevTrack">⏮ Poprzedni</button><button id="nextTrack">Następny ⏭</button><b id="nowPlaying">Nic nie jest odtwarzane</b></div>
-      <audio id="mainPlayer" controls preload="none"></audio>
-      <div class="muted" id="playerStatus">Wybierz wersję modelu lub utwór, aby zbudować kolejkę.</div>
+      <div class="muted" id="playerStatus">Przyciski otwierają wybrany utwór w oficjalnym odtwarzaczu Suno w nowej karcie.</div>
     </div>
     <div class="queue-list" id="queueList"></div>
   </section>
 </section>
 
 <section class="card">
-  <b>Reguły archiwum — Explorer 8.3</b>
+  <b>Reguły archiwum — Explorer 8.5</b>
   <p class="muted">Oddzielne kategorie: v3, v3.5, v4, v4.5, v4.5+, warianty Pro rozpoznane jawnie oraz v5. Rekordy bez major_model_version są odseparowane jako nieustalone. Wersje v6 i nowsze są odrzucane. Nie zgadujemy oznaczeń Pro na podstawie samej nazwy technicznej modelu.</p>
   <p class="muted">Informacje o coverach i pochodzeniu pokazujemy tylko wtedy, gdy API faktycznie je zwraca. Puste pole nie oznacza, że utwór na pewno nie jest coverem.</p>
   <a id="health" href="#" target="_blank" rel="noopener">Sprawdź status Workera</a>
@@ -235,7 +233,7 @@ function renderResults(){
     const origin=s.cover_clip_id?`<div class="muted">ID oryginału/coveru: ${esc(s.cover_clip_id)}</div>`:"";
     const remix=s.is_remix===true?"TAK":s.is_remix===false?"NIE":"brak danych";
     const task=s.task||s.type||"brak danych";
-    const play=s.audio_url?`<button class="play-song" data-play-id="${esc(s.id)}">▶ Odtwórz / dodaj do kolejki</button>`:"<div class='muted'>Brak bezpośredniego adresu audio w odpowiedzi API.</div>";
+    const play=s.id?`<button class="play-song" data-play-id="${esc(s.id)}">▶ Otwórz odtwarzacz Suno</button>`:"<div class='muted'>Brak ID utworu — nie można otworzyć odtwarzacza.</div>";
     const suno=s.id?`<a href="https://suno.com/song/${encodeURIComponent(s.id)}" target="_blank" rel="noopener">Otwórz w Suno ↗</a>`:"";
     return `<article class="song">
       <span class="badge version">${esc(s._version.label)}</span><span class="badge">model: ${esc(s.model_name||"—")}</span><span class="badge">remix: ${remix}</span>
@@ -248,8 +246,12 @@ function renderResults(){
     </article>`;
   }).join("");
   // Kolejka jest automatycznie odświeżana zgodnie z wersją i filtrami.
-  currentQueue=filtered.filter(s=>s.audio_url);
-  if(currentSongId){const idx=currentQueue.findIndex(s=>s.id===currentSongId);currentIndex=idx;}
+  currentQueue=filtered.filter(s=>s.id);
+  if(currentSongId){
+    const idx=currentQueue.findIndex(s=>s.id===currentSongId);
+    currentIndex=idx;
+    if(idx<0)currentSongId="";
+  }
   renderQueue();
   $("results").querySelectorAll("[data-play-id]").forEach(b=>b.addEventListener("click",()=>{
     const idx=currentQueue.findIndex(s=>s.id===b.dataset.playId);
@@ -264,16 +266,14 @@ function renderQueue(){
 }
 function playIndex(index){
   const song=currentQueue[index];
-  if(!song)return;
-  if(!song.audio_url){$("playerStatus").textContent="Ten utwór nie ma adresu audio.";return;}
-  currentIndex=index;currentSongId=song.id||"";
-  const player=$("mainPlayer");
-  player.src=`${W}/audio?src=${encodeURIComponent(song.audio_url)}`;
+  if(!song || !song.id)return;
+  currentIndex=index;
+  currentSongId=song.id;
+  const url=`https://suno.com/song/${encodeURIComponent(song.id)}`;
+  window.open(url,"_blank","noopener,noreferrer");
   $("nowPlaying").textContent=`${song.title} — ${song._version.label}`;
-  $("playerStatus").textContent="Pobieranie audio przez Worker…";
+  $("playerStatus").textContent="Otwarto oficjalną stronę utworu Suno w nowej karcie.";
   renderQueue();
-  const promise=player.play();
-  if(promise&&promise.catch)promise.catch(err=>{$("playerStatus").textContent=`Nie udało się uruchomić audio: ${err.message||err}. Sprawdźmy dostępność pliku przez proxy.`;});
 }
 function stepTrack(delta){
   if(!currentQueue.length)return;
@@ -282,13 +282,10 @@ function stepTrack(delta){
   if(next>=currentQueue.length)next=0;
   playIndex(next);
 }
-$("mainPlayer").addEventListener("ended",()=>stepTrack(1));
-$("mainPlayer").addEventListener("error",()=>{$("playerStatus").textContent="Błąd pliku audio przez proxy. Możliwe, że plik jest niedostępny albo Suno odrzuca żądanie.";});
-$("mainPlayer").addEventListener("canplay",()=>{$("playerStatus").textContent="Audio gotowe do odtwarzania.";});
 $("prevTrack").addEventListener("click",()=>stepTrack(-1));
 $("nextTrack").addEventListener("click",()=>stepTrack(1));
 $("playQueue").addEventListener("click",()=>playIndex(currentIndex>=0?currentIndex:0));
-$("clearQueue").addEventListener("click",()=>{currentQueue=[];currentIndex=-1;currentSongId="";$("mainPlayer").pause();$("mainPlayer").removeAttribute("src");$("mainPlayer").load();$("nowPlaying").textContent="Nic nie jest odtwarzane";$("playerStatus").textContent="Kolejka wyczyszczona.";renderQueue();});
+$("clearQueue").addEventListener("click",()=>{currentQueue=[];currentIndex=-1;currentSongId="";$("nowPlaying").textContent="Nic nie wybrano";$("playerStatus").textContent="Kolejka wyczyszczona.";renderQueue();});
 
 $("versionFilter").addEventListener("change",e=>setVersion(e.target.value));
 ["filterText","styleFilter","excludeFilter","matchFilter","experimentalFilter"].forEach(id=>{
@@ -331,7 +328,7 @@ $("load").addEventListener("click",async()=>{
     $("summary").classList.remove("hidden");
     $("playlistTitle").textContent=title||"Wyniki playlisty";
     $("playlistMeta").textContent=`ID: ${id} · pobrano ${pages} stron · ${allSongs.length+(counts.excluded||0)} rekordów`;
-    $("versionNote").textContent="EXPLORER 8.3 · proxy audio i kolejka";
+    $("versionNote").textContent="EXPLORER 8.5 · kolejka i oficjalny odtwarzacz Suno";
     renderStats();setVersion("all");
     $("status").textContent=`Gotowe. Odczytano ${allSongs.length+(counts.excluded||0)} rekordów; ${counts.unknown||0} bez potwierdzonej wersji pozostawiono w osobnej kategorii. v6+ wykluczono.`;
   }catch(err){$("status").textContent="Błąd: "+err.message;}
