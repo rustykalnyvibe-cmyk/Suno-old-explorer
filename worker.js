@@ -1,5 +1,5 @@
 const SUNO_API = "https://studio-api-prod.suno.com/api/playlist/";
-const VERSION = "explorer-8.3";
+const VERSION = "explorer-8.4-diagnostyka";
 const MAX_PAGE = 50;
 
 function json(data, status = 200) {
@@ -69,9 +69,51 @@ export default {
       return json({
         ok: true,
         version: VERSION,
-        source: "Public Suno playlist API + audio proxy",
-        message: "Explorer 8.3 działa. Audio jest przekazywane przez Worker."
+        source: "Public Suno playlist API + audio proxy diagnostics",
+        message: "Explorer 8.4 diagnostyka działa. Użyj /audio-check do testu pliku audio."
       });
+    }
+
+    if (url.pathname === "/audio-check") {
+      const source = url.searchParams.get("src");
+      if (!source) return json({ ok: false, error: "Brak adresu źródłowego audio." }, 400);
+      let audioUrl;
+      try { audioUrl = new URL(source); } catch { return json({ ok: false, error: "Nieprawidłowy adres audio." }, 400); }
+      const host = audioUrl.hostname.toLowerCase();
+      const allowedHost = host === "suno.ai" || host.endsWith(".suno.ai") ||
+        host === "suno.com" || host.endsWith(".suno.com") ||
+        host === "cloudfront.net" || host.endsWith(".cloudfront.net");
+      if (audioUrl.protocol !== "https:" || !allowedHost) {
+        return json({ ok: false, error: "Niedozwolony host pliku audio." }, 400);
+      }
+      try {
+        const upstream = await fetch(audioUrl.toString(), {
+          method: "GET",
+          headers: { "accept": "audio/mp4,audio/*;q=0.9,*/*;q=0.8", "range": "bytes=0-63" },
+          redirect: "follow"
+        });
+        const bytes = new Uint8Array(await upstream.arrayBuffer());
+        const hex = Array.from(bytes.slice(0, 32), b => b.toString(16).padStart(2, "0")).join(" ");
+        const ascii = Array.from(bytes.slice(0, 32), b => (b >= 32 && b <= 126) ? String.fromCharCode(b) : ".").join("");
+        const contentType = upstream.headers.get("content-type") || "";
+        const looksLikeMp4 = bytes.length >= 8 && String.fromCharCode(...bytes.slice(4, 8)) === "ftyp";
+        return json({
+          ok: upstream.ok && (contentType.startsWith("audio/") || contentType.includes("mp4") || looksLikeMp4),
+          upstream_status: upstream.status,
+          content_type: contentType,
+          content_length: upstream.headers.get("content-length"),
+          content_range: upstream.headers.get("content-range"),
+          accept_ranges: upstream.headers.get("accept-ranges"),
+          bytes_received: bytes.length,
+          first_bytes_hex: hex,
+          first_bytes_ascii: ascii,
+          mp4_signature_found: looksLikeMp4,
+          final_url_host: new URL(upstream.url || audioUrl.toString()).hostname,
+          note: upstream.ok ? "Odpowiedź HTTP jest poprawna; sprawdź typ i sygnaturę pliku." : "CDN zwrócił błąd HTTP zamiast poprawnego pliku audio."
+        });
+      } catch (error) {
+        return json({ ok: false, error: `Błąd testu CDN: ${String(error?.message || error)}` }, 502);
+      }
     }
 
     if (url.pathname === "/audio") {
