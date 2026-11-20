@@ -43,7 +43,7 @@ const $=id=>document.getElementById(id);
 $("health").href=W+"/health";
 let active=null, queue=[], queueIndex=-1;
 const order=["v3","v3.5","v4","v4.5","v4.5+","v4.5pro","v4.5+pro","v4.5-all","v5","unknown"];
-const labels={v3:"v3", "v3.5":"v3.5",v4:"v4",v4.5:"v4.5","v4.5+":"v4.5+",v4.5pro:"v4.5 Pro","v4.5+pro":"v4.5+ Pro","v4.5-all":"v4.5-all",v5:"v5",unknown:"Nieustalone"};
+const labels={v3:"v3", "v3.5":"v3.5",v4:"v4","v4.5":"v4.5","v4.5+":"v4.5+","v4.5pro":"v4.5 Pro","v4.5+pro":"v4.5+ Pro","v4.5-all":"v4.5-all",v5:"v5",unknown:"Nieustalone"};
 function db(){return new Promise((resolve,reject)=>{const r=indexedDB.open(DB,1);r.onupgradeneeded=()=>r.result.createObjectStore(STORE,{keyPath:"id"});r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});}
 async function allSessions(){const d=await db();return new Promise((res,rej)=>{const r=d.transaction(STORE).objectStore(STORE).getAll();r.onsuccess=()=>res(r.result.sort((a,b)=>b.updatedAt-a.updatedAt));r.onerror=()=>rej(r.error);});}
 async function saveSession(s){s.updatedAt=Date.now();const d=await db();return new Promise((res,rej)=>{const t=d.transaction(STORE,"readwrite");t.objectStore(STORE).put(s);t.oncomplete=()=>res();t.onerror=()=>rej(t.error);});}
