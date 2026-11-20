@@ -166,6 +166,12 @@ details{margin-top:18px}
   margin-left:4px
 }
 
+.diag-title{
+  font-size:17px;
+  font-weight:700;
+  margin-bottom:8px
+}
+
 @media(max-width:520px){
   body{padding:12px}
   .card{padding:15px}
@@ -226,7 +232,6 @@ placeholder="np. trance, melodic, female vocal"
 <label>Szybki styl</label>
 
 <div class="chips">
-
 <button type="button" class="chip" data-add="trance">Trance</button>
 <button type="button" class="chip" data-add="rap">Rap</button>
 <button type="button" class="chip" data-add="dnb">DnB</button>
@@ -237,13 +242,11 @@ placeholder="np. trance, melodic, female vocal"
 <button type="button" class="chip" data-add="punk">Punk</button>
 <button type="button" class="chip" data-add="metal">Metal</button>
 <button type="button" class="chip" data-add="jazz">Jazz</button>
-
 </div>
 
 <label>Eksperymentalne DNA</label>
 
 <div class="chips">
-
 <button type="button" class="chip" data-add="experimental">experimental</button>
 <button type="button" class="chip" data-add="turntablism">turntablism</button>
 <button type="button" class="chip" data-add="avant-garde">avant-garde</button>
@@ -258,17 +261,14 @@ placeholder="np. trance, melodic, female vocal"
 <button type="button" class="chip" data-add="IDM">IDM</button>
 <button type="button" class="chip" data-add="leftfield">leftfield</button>
 <button type="button" class="chip" data-add="hybrid">hybrid</button>
-
 </div>
 
 <label>Historia / kultowe tagi</label>
 
 <div class="chips">
-
 <button type="button" class="chip" data-add="MAX MODE">MAX MODE</button>
 <button type="button" class="chip" data-add="CHAOTIC">CHAOTIC</button>
 <button type="button" class="chip" data-add="FREESTYLE">FREESTYLE</button>
-
 </div>
 
 <label>Wyklucz</label>
@@ -282,7 +282,6 @@ placeholder="np. japanese, k-pop, anime"
 
 <div>
 <label>Dopasowanie</label>
-
 <select id="match">
 <option value="all">Wszystkie słowa</option>
 <option value="any">Dowolne słowo</option>
@@ -291,7 +290,6 @@ placeholder="np. japanese, k-pop, anime"
 
 <div>
 <label>Tryb eksperymentalny</label>
-
 <select id="experimental">
 <option value="normal">Normalny</option>
 <option value="boost">Preferuj eksperymentalne</option>
@@ -311,6 +309,25 @@ Gotowe.
 
 </div>
 
+<!-- DIAGNOSTYKA JEST TERAZ ODDZIELONA OD KARTY WYNIKU -->
+
+<div class="card" id="diagnostics" hidden>
+
+<div class="diag-title">Diagnostyka wyszukiwania</div>
+
+<div class="small" id="diagInfo">
+Oczekiwanie na wyszukiwanie.
+</div>
+
+<div class="stats" id="stats"></div>
+
+<details open>
+<summary>Ostatnia odpowiedź serwera</summary>
+<pre id="diagRaw">Brak danych.</pre>
+</details>
+
+</div>
+
 <div class="card" id="result" hidden>
 
 <div id="badges"></div>
@@ -322,8 +339,6 @@ Gotowe.
 <div class="meta" id="meta"></div>
 
 <div class="data-grid" id="dataGrid"></div>
-
-<div class="stats" id="stats"></div>
 
 <p>
 <a id="song" target="_blank" rel="noopener">
@@ -365,6 +380,66 @@ const $=id=>document.getElementById(id);
 
 $("health").href=W+"/health";
 $("dataset").href=W+"/stats";
+
+const STAT_KEYS=[
+"sampled",
+"complete",
+"incomplete",
+"http_errors",
+"fetch_errors",
+"model_missing",
+"model_mismatch",
+"matched"
+];
+
+const STAT_LABELS={
+sampled:"Sprawdzone",
+complete:"Ukończone",
+incomplete:"Nieukończone",
+http_errors:"Błędy HTTP",
+fetch_errors:"Błędy połączenia",
+model_missing:"Brak wersji modelu",
+model_mismatch:"Inna wersja",
+matched:"Dopasowane"
+};
+
+let combinedStats={};
+
+function resetStats(){
+
+combinedStats={};
+
+STAT_KEYS.forEach(key=>{
+combinedStats[key]=0;
+});
+
+renderStats();
+
+}
+
+function renderStats(){
+
+$("stats").innerHTML=STAT_KEYS.map(key=>
+`<div class="stat">
+${esc(STAT_LABELS[key])}
+<strong>${esc(combinedStats[key]??0)}</strong>
+</div>`
+).join("");
+
+}
+
+function updateStats(stats){
+
+if(!stats)return;
+
+STAT_KEYS.forEach(key=>{
+combinedStats[key]+=
+Number(stats[key]||0);
+});
+
+renderStats();
+
+}
 
 function add(term){
 
@@ -410,7 +485,7 @@ return "UNKNOWN";
 
 }
 
-function show(d,stats){
+function show(d){
 
 $("result").hidden=false;
 
@@ -491,22 +566,6 @@ row=>
 $("song").href=
 "https://suno.com/song/"+encodeURIComponent(d.id||"");
 
-const statRows=[
-["Sprawdzone",stats?.sampled],
-["Ukończone",stats?.complete],
-["Nieukończone",stats?.incomplete],
-["Błędy HTTP",stats?.http_errors],
-["Błędy połączenia",stats?.fetch_errors],
-["Brak wersji modelu",stats?.model_missing],
-["Inna wersja",stats?.model_mismatch],
-["Dopasowane",stats?.matched]
-];
-
-$("stats").innerHTML=statRows.map(
-row=>
-`<div class="stat">${esc(row[0])}<strong>${esc(row[1]??0)}</strong></div>`
-).join("");
-
 $("raw").textContent=JSON.stringify(
 d.raw_api||d,
 null,
@@ -520,8 +579,14 @@ $("random").addEventListener("click",async()=>{
 const button=$("random");
 
 button.disabled=true;
+
 $("result").hidden=true;
-$("status").textContent="Szukam utworów…";
+$("diagnostics").hidden=false;
+
+$("diagInfo").textContent="Rozpoczynam wyszukiwanie…";
+$("diagRaw").textContent="Oczekiwanie na odpowiedź serwera.";
+
+resetStats();
 
 try{
 
@@ -535,17 +600,6 @@ const rounds=Math.ceil(total/chunk);
 
 let all=[];
 let checked=0;
-
-let combinedStats={
-sampled:0,
-complete:0,
-incomplete:0,
-http_errors:0,
-fetch_errors:0,
-model_missing:0,
-model_mismatch:0,
-matched:0
-};
 
 for(let i=0;i<rounds;i++){
 
@@ -565,18 +619,45 @@ experimental:$("experimental").value
 $("status").textContent=
 `Szukam… partia ${i+1}/${rounds}`;
 
+$("diagInfo").textContent=
+`Wykonano ${i+1} z ${rounds} partii. Łącznie sprawdzono ${checked} kandydatów.`;
+
 const response=await fetch(W+"/random?"+params);
 
-const data=await response.json();
+const responseText=await response.text();
 
-checked+=data.checked||0;
+let data;
 
-if(data.stats){
+try{
+data=JSON.parse(responseText);
+}catch(parseError){
 
-for(const key of Object.keys(combinedStats)){
-combinedStats[key]+=
-Number(data.stats[key]||0);
+$("diagRaw").textContent=
+`HTTP ${response.status}\n\nOdpowiedź nie jest poprawnym JSON:\n${responseText}`;
+
+throw Error(
+`Serwer zwrócił niepoprawną odpowiedź (HTTP ${response.status}).`
+);
+
 }
+
+checked+=Number(data.checked||0);
+
+updateStats(data.stats);
+
+$("diagInfo").textContent=
+`Partia ${i+1}/${rounds}. HTTP ${response.status}. Sprawdzono łącznie ${checked} kandydatów.`;
+
+$("diagRaw").textContent=JSON.stringify({
+http_status:response.status,
+response:data
+},null,2);
+
+if(!response.ok){
+
+throw Error(
+data.error||`Błąd serwera HTTP ${response.status}`
+);
 
 }
 
@@ -588,8 +669,11 @@ all.push(...data.results);
 
 if(!all.length){
 
+$("diagInfo").textContent=
+`Zakończono wyszukiwanie. Sprawdzono ${checked} kandydatów. Nie znaleziono dopasowania.`;
+
 throw Error(
-"Nie znaleziono pasującego utworu. Zwiększ liczbę prób albo poluzuj filtr."
+"Nie znaleziono pasującego utworu. Sprawdź statystyki diagnostyczne poniżej."
 );
 
 }
@@ -608,14 +692,27 @@ const selected=best[
 Math.floor(Math.random()*best.length)
 ];
 
-show(selected,combinedStats);
+show(selected);
 
 $("status").textContent=
 `Znaleziono utwór. Sprawdzono ${checked} kandydatów.`;
 
+$("diagInfo").textContent=
+`Sukces. Sprawdzono ${checked} kandydatów. Znaleziono ${all.length} pasujących utworów.`;
+
 }catch(error){
 
 $("status").textContent="Błąd: "+error.message;
+
+$("diagInfo").textContent+=
+" Wyszukiwanie zakończone błędem.";
+
+if($("diagRaw").textContent==="Oczekiwanie na odpowiedź serwera."){
+
+$("diagRaw").textContent=
+"Błąd:\n"+error.message;
+
+}
 
 }finally{
 
