@@ -1,897 +1,422 @@
-const DATASET="https://huggingface.co/datasets/sleeping-ai/Suno-Public-Playlist-small-audio/resolve/main/suno_music.txt?download=true";
 
-const EXP=[
-"experimental",
-"turntablism",
-"avant-garde",
-"avant garde",
-"abstract",
-"weird",
-"crazy",
-"mystic",
-"psychedelic",
-"surreal",
-"unconventional",
-"glitch",
-"idm",
-"leftfield",
-"hybrid",
-"chaotic",
-"freestyle",
-"experimental electronic"
+const DATASET = "https://huggingface.co/datasets/sleeping-ai/Suno-Public-Playlist-small-audio/resolve/main/suno_music.txt?download=true";
+
+const EXP = [
+  "experimental", "turntablism", "avant-garde", "avant garde",
+  "abstract", "weird", "crazy", "mystic", "psychedelic",
+  "surreal", "unconventional", "glitch", "idm", "leftfield",
+  "hybrid", "chaotic", "freestyle", "experimental electronic"
 ];
 
-
-function cors(b,s=200){
-
-return new Response(
-JSON.stringify(b),
-{
-status:s,
-headers:{
-"content-type":"application/json; charset=utf-8",
-"access-control-allow-origin":"*",
-"access-control-allow-methods":"GET,OPTIONS",
-"access-control-allow-headers":"*"
-}
-}
-);
-
+function cors(b, s = 200) {
+  return new Response(JSON.stringify(b), {
+    status: s,
+    headers: {
+      "content-type": "application/json; charset=utf-8",
+      "access-control-allow-origin": "*",
+      "access-control-allow-methods": "GET,OPTIONS",
+      "access-control-allow-headers": "*",
+      "cache-control": "no-store"
+    }
+  });
 }
 
-
-function norm(s){
-
-return String(s||"")
-.toLowerCase()
-.normalize("NFKD")
-.replace(/[\u0300-\u036f]/g,"")
-.replace(/[^a-z0-9+#.\- ]+/g," ")
-.replace(/\s+/g," ")
-.trim();
-
+function norm(s) {
+  return String(s || "")
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9+#.\- ]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
-
-function terms(s){
-
-return String(s||"")
-.split(",")
-.map(norm)
-.filter(Boolean)
-.slice(0,8);
-
+function terms(s) {
+  return String(s || "")
+    .split(",")
+    .map(norm)
+    .filter(Boolean)
+    .slice(0, 8);
 }
 
-
-function ver(v,w){
-
-let x=norm(v);
-
-return
-
-w==="v3"
-?
-(x==="v3"||x==="v3-all")
-
-:
-
-w==="v3.5"
-?
-x.includes("3.5")
-
-:
-
-w==="v3both"
-?
-(
-x==="v3"||
-x==="v3-all"||
-x.includes("3.5")
-)
-
-:
-
-w==="v4"
-?
-(
-x.startsWith("v4")&&
-!x.includes("4.5")
-)
-
-:
-
-w==="v4.5"
-?
-x.includes("4.5")
-
-:
-
-x.startsWith("v4");
-
+function first(o, keys) {
+  for (const k of keys) {
+    if (o && o[k] !== undefined && o[k] !== null && o[k] !== "") {
+      return o[k];
+    }
+  }
+  return null;
 }
 
+function modelLabel(d) {
+  const md = d?.metadata || {};
 
-function expscore(h){
-
-return EXP.reduce(
-(n,t)=>
-n+(h.includes(norm(t))?1:0),
-0
-);
-
+  return String(
+    first(d, ["major_model_version", "model_version"]) ||
+    first(md, ["major_model_version", "model_version"]) ||
+    ""
+  );
 }
-
-
-function score(d,st,ex,mode,em){
-
-let h=
-norm(
-(d.tags||"")+
-" "+
-(d.title||"")
-);
-
-
-if(
-ex.some(x=>h.includes(x))
-)
-return null;
-
-
-let hits=
-st.filter(
-x=>h.includes(x)
-).length;
-
-
-if(
-st.length&&
-!h.includes(st[0])
-)
-return null;
-
-
-if(
-st.length&&
-mode==="all"&&
-hits<st.length
-)
-return null;
-
-
-if(
-st.length&&
-mode==="any"&&
-hits<1
-)
-return null;
-
-
-let e=expscore(h);
-
-
-if(
-em==="only"&&!e
-)
-return null;
-
-
-let s=
-hits*100+
-e*10+
-(
-st.length&&
-h.includes(st[0])
-?
-30
-:
-0
-);
-
-
-if(em==="boost")
-s+=e*25;
-
-
-return{
-...d,
-match_score:s,
-experimental_hits:e
-};
-
-}
-
-
-async function ids(){
-
-let c=
-await caches.default.match(
-new Request(
-"https://cache.local/suno-ids"
-)
-);
-
-
-if(c)
-return c.json();
-
-
-let r=
-await fetch(
-DATASET,
-{
-cf:{
-cacheTtl:86400
-}
-}
-);
-
-
-if(!r.ok)
-throw Error(
-"Nie można pobrać listy ID."
-);
-
-
-let a=[
-...new Set(
-[
-...(await r.text())
-.matchAll(
-/https:\/\/cdn1\.suno\.ai\/([0-9a-f-]{36})\.mp3/gi
-)
-]
-.map(m=>m[1])
-)
-];
-
-
-if(!a.length)
-throw Error(
-"Lista ID jest pusta."
-);
-
-
-let z=
-new Response(
-JSON.stringify(a),
-{
-headers:{
-"content-type":"application/json"
-}
-}
-);
-
-
-await caches.default.put(
-new Request(
-"https://cache.local/suno-ids"
-),
-z.clone()
-);
-
-
-return a;
-
-}
-
 
 /*
-Pomocniczo:
-szukamy wartości zarówno
-bezpośrednio w obiekcie clip,
-jak i w metadata.
+Nie przypisujemy modelu na podstawie samego "chirp".
+Nieznana wartość pozostaje nieznana.
 */
+function ver(v, wanted) {
+  const x = norm(v);
 
-function first(o,keys){
+  if (!x) return false;
 
-for(
-const k of keys
-){
+  if (wanted === "v3") {
+    return x === "v3" || x === "v3-all";
+  }
 
-if(
-o &&
-o[k]!==undefined &&
-o[k]!==null &&
-o[k]!==""
-)
-return o[k];
+  if (wanted === "v3.5") {
+    return x.includes("3.5");
+  }
 
+  if (wanted === "v3both") {
+    return x === "v3" || x === "v3-all" || x.includes("3.5");
+  }
+
+  if (wanted === "v4") {
+    return x.startsWith("v4") && !x.includes("4.5");
+  }
+
+  if (wanted === "v4.5") {
+    return x.includes("4.5");
+  }
+
+  if (wanted === "both") {
+    return x.startsWith("v4");
+  }
+
+  return false;
 }
 
-return null;
-
+function expscore(h) {
+  return EXP.reduce(
+    (n, t) => n + (h.includes(norm(t)) ? 1 : 0),
+    0
+  );
 }
 
+function extract(d, id) {
+  const md = d?.metadata || {};
+  const persona = first(d, ["persona"]) || first(md, ["persona"]) || {};
+  const voice = first(d, ["voice"]) || first(md, ["voice"]) || {};
 
-/*
-Wyciągamy interesujące nas dane,
-ale zachowujemy również cały oryginalny
-JSON w raw_api.
-*/
+  const tags = [
+    first(md, ["tags"]),
+    first(d, ["display_tags"]),
+    first(d, ["tags"])
+  ].filter(Boolean).join(", ");
 
-function extract(d,id){
+  return {
+    id: d?.id || id,
 
-const md=
-d?.metadata||{};
+    model_version: modelLabel(d),
+    model_name: first(d, ["model_name"]) || first(md, ["model_name"]) || "",
 
+    title: first(d, ["title"]) || first(md, ["title"]) || "",
+    handle: first(d, ["handle"]) || "",
+    display_name: first(d, ["display_name"]) || "",
 
-const persona=
-first(d,["persona"])||
-first(md,["persona"])||
-{};
+    tags,
+    display_tags: first(d, ["display_tags"]) || "",
 
+    created_at: first(d, ["created_at"]) || "",
+    audio_url: first(d, ["audio_url"]) || "",
 
-const voice=
-first(d,["voice"])||
-first(md,["voice"])||
-{};
+    has_vocal: first(d, ["has_vocal"]) ?? first(md, ["has_vocal"]),
 
+    can_remix: first(d, ["can_remix"]) ?? first(md, ["can_remix"]),
+    can_download_remix: first(d, ["can_download_remix"]),
+    is_remix: first(d, ["is_remix"]) ?? first(md, ["is_remix"]),
+    is_public: first(d, ["is_public"]),
 
-return{
+    clip_type: first(md, ["type"]) ?? first(d, ["type"]),
+    source_type: first(d, ["source_type", "clip_type", "type"]) ??
+      first(md, ["source_type", "clip_type", "type"]),
 
-id:
-d?.id||
-id,
+    voice_id: first(d, ["voice_id"]) ??
+      first(md, ["voice_id"]) ??
+      first(voice, ["id", "voice_id"]),
 
+    voice_name: first(d, ["voice_name"]) ??
+      first(md, ["voice_name"]) ??
+      first(voice, ["name", "voice_name"]),
 
-model_version:
-d?.major_model_version||
-d?.model_version||
-md?.major_model_version||
-"",
+    persona_id: first(d, ["persona_id"]) ??
+      first(md, ["persona_id"]) ??
+      first(persona, ["id", "persona_id"]),
 
+    persona_name: first(d, ["persona_name"]) ??
+      first(md, ["persona_name"]) ??
+      first(persona, ["name", "persona_name"]),
 
-title:
-d?.title||
-md?.title||
-"",
+    source_clips: first(d, ["source_clips"]) ??
+      first(md, ["source_clips"]),
 
-
-handle:
-d?.handle||
-md?.handle||
-"",
-
-
-display_name:
-d?.display_name||
-md?.display_name||
-"",
-
-
-tags:
-md?.tags||
-d?.tags||
-"",
-
-
-created_at:
-d?.created_at||
-md?.created_at||
-"",
-
-
-audio_url:
-d?.audio_url||
-md?.audio_url||
-"",
-
-
-has_vocal:
-first(
-d,
-["has_vocal"]
-)
-??
-first(
-md,
-["has_vocal"]
-),
-
-
-is_remix:
-first(
-d,
-["is_remix"]
-)
-??
-first(
-md,
-["is_remix"]
-),
-
-
-voice_id:
-first(
-d,
-["voice_id"]
-)
-??
-first(
-md,
-["voice_id"]
-)
-??
-first(
-voice,
-["id","voice_id"]
-),
-
-
-voice_name:
-first(
-d,
-["voice_name"]
-)
-??
-first(
-md,
-["voice_name"]
-)
-??
-first(
-voice,
-["name","voice_name"]
-),
-
-
-persona_id:
-first(
-d,
-["persona_id"]
-)
-??
-first(
-md,
-["persona_id"]
-)
-??
-first(
-persona,
-["id","persona_id"]
-),
-
-
-persona_name:
-first(
-d,
-["persona_name"]
-)
-??
-first(
-md,
-["persona_name"]
-)
-??
-first(
-persona,
-["name","persona_name"]
-),
-
-
-source_type:
-first(
-d,
-["source_type","clip_type","type"]
-)
-??
-first(
-md,
-["source_type","clip_type","type"]
-),
-
-
-source_clips:
-first(
-d,
-["source_clips"]
-)
-??
-first(
-md,
-["source_clips"]
-),
-
-
-raw_api:d
-
-};
-
+    raw_api: d
+  };
 }
 
-
-async function clip(id){
-
-let r=
-await fetch(
-"https://studio-api.prod.suno.com/api/clip/"+id,
-{
-headers:{
-"user-agent":"Mozilla/5.0"
-},
-cf:{
-cacheTtl:3600,
-cacheEverything:true
-}
-}
-);
-
-
-if(!r.ok)
-return null;
-
-
-let d=
-await r.json();
-
-
-if(
-d.status!=="complete"||
-!d.major_model_version
-)
-return null;
-
-
-return extract(d,id);
-
+function searchable(d) {
+  return norm([
+    d.tags,
+    d.display_tags,
+    d.title,
+    d.model_name
+  ].filter(Boolean).join(" "));
 }
 
+function score(d, st, ex, mode, em) {
+  const h = searchable(d);
 
-export default{
+  if (ex.some(x => h.includes(x))) return null;
 
-async fetch(req){
+  const hits = st.filter(x => h.includes(x)).length;
 
-if(req.method==="OPTIONS")
-return cors({},204);
+  if (st.length && !h.includes(st[0])) return null;
+  if (st.length && mode === "all" && hits < st.length) return null;
+  if (st.length && mode === "any" && hits < 1) return null;
 
+  const e = expscore(h);
 
-let u=
-new URL(req.url);
+  if (em === "only" && !e) return null;
 
+  let s = hits * 100 + e * 10;
 
-if(u.pathname==="/health")
-return cors({ok:true});
+  if (st.length && h.includes(st[0])) s += 30;
+  if (em === "boost") s += e * 25;
 
-
-/*
-================================================
-DEBUG
-================================================
-
-Przykład:
-
-/debug?id=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-
-Zwraca pełny JSON z API Suno.
-*/
-
-if(
-u.pathname==="/debug"
-){
-
-let id=
-u.searchParams.get("id");
-
-
-if(
-!id||
-!/^[0-9a-f-]{36}$/i.test(id)
-){
-
-return cors(
-{
-ok:false,
-error:
-"Podaj prawidłowe ID UUID utworu."
-},
-400
-);
-
+  return {
+    ...d,
+    match_score: s,
+    experimental_hits: e
+  };
 }
 
+async function ids() {
+  const key = new Request("https://cache.local/suno-ids");
 
-try{
+  const cached = await caches.default.match(key);
+  if (cached) return cached.json();
 
-let r=
-await fetch(
-"https://studio-api.prod.suno.com/api/clip/"+id,
-{
-headers:{
-"user-agent":"Mozilla/5.0"
-},
-cf:{
-cacheTtl:3600,
-cacheEverything:true
-}
-}
-);
+  const r = await fetch(DATASET, {
+    cf: { cacheTtl: 86400 }
+  });
 
+  if (!r.ok) throw Error("Nie można pobrać listy ID.");
 
-let body=
-await r.text();
+  const body = await r.text();
 
+  const a = [...new Set(
+    [...body.matchAll(/https:\/\/cdn1\.suno\.ai\/([0-9a-f-]{36})\.mp3/gi)]
+      .map(m => m[1])
+  )];
 
-let parsed;
+  if (!a.length) throw Error("Lista ID jest pusta.");
 
+  await caches.default.put(
+    key,
+    new Response(JSON.stringify(a), {
+      headers: { "content-type": "application/json" }
+    })
+  );
 
-try{
-
-parsed=
-JSON.parse(body);
-
-}
-
-catch{
-
-parsed={
-raw:body
-};
-
+  return a;
 }
 
+async function clip(id) {
+  const r = await fetch(
+    "https://studio-api.prod.suno.com/api/clip/" + id,
+    {
+      headers: { "user-agent": "Mozilla/5.0" },
+      cf: { cacheTtl: 3600, cacheEverything: true }
+    }
+  );
 
-return cors(
-{
-ok:r.ok,
-http_status:r.status,
-id:id,
-api:parsed
-},
-r.ok?200:502
-);
+  if (!r.ok) return { ok: false, reason: "http_" + r.status };
 
+  let d;
 
+  try {
+    d = await r.json();
+  } catch {
+    return { ok: false, reason: "invalid_json" };
+  }
+
+  if (d.status !== "complete") {
+    return { ok: false, reason: "not_complete" };
+  }
+
+  return {
+    ok: true,
+    data: extract(d, id)
+  };
 }
 
-catch(e){
-
-return cors(
-{
-ok:false,
-id:id,
-error:
-String(
-e.message||e
-)
-},
-500
-);
-
-}
-
-}
-
-
-if(
-u.pathname!=="/random"
-){
-
-return cors(
-{
-ok:false,
-error:"Not found"
-},
-404
-);
-
-}
-
-
-try{
-
-let wanted=
-u.searchParams.get("model")||
-"both";
-
-
-/*
-Cloudflare Free:
-maksymalnie 20 kandydatów
-na jedno wywołanie naszego endpointu.
-*/
-
-let n=
-Math.min(
-Math.max(
-+u.searchParams.get("tries")||20,
-1
-),
-20
-);
-
-
-let st=
-terms(
-u.searchParams.get("style")
-);
-
-
-let ex=
-terms(
-u.searchParams.get("exclude")
-);
-
-
-let mode=
-u.searchParams.get("match")==="any"
-?
-"any"
-:
-"all";
-
-
-let em=
-[
-"normal",
-"boost",
-"only"
-]
-.includes(
-u.searchParams.get("experimental")
-)
-?
-u.searchParams.get("experimental")
-:
-"normal";
-
-
-let a=
-await ids();
-
-
-let sample=[];
-
-let seen=
-new Set();
-
-
-while(
-sample.length<
-Math.min(n,a.length)
-){
-
-let id=
-a[
-Math.floor(
-Math.random()*a.length
-)
-];
-
-
-if(
-!seen.has(id)
-){
-
-seen.add(id);
-
-sample.push(id);
-
-}
-
-}
-
-
-let m=[];
-
-let checked=0;
-
-
-/*
-5 równoległych zapytań.
-Nie zwiększamy tego,
-żeby nie uderzać w limit
-połączeń Cloudflare.
-*/
-
-for(
-let i=0;
-i<sample.length;
-i+=5
-){
-
-let b=
-await Promise.all(
-sample
-.slice(i,i+5)
-.map(clip)
-);
-
-
-checked+=b.length;
-
-
-for(
-let d of b
-){
-
-if(
-d&&
-ver(
-d.model_version,
-wanted
-)
-){
-
-let x=
-score(
-d,
-st,
-ex,
-mode,
-em
-);
-
-
-if(x)
-m.push(x);
-
-}
-
-}
-
-}
-
-
-if(!m.length){
-
-return cors(
-{
-ok:false,
-checked,
-error:
-st.length
-?
-"Nie znaleziono utworu spełniającego warunki. Zwiększ liczbę prób albo poluzuj filtr."
-:
-"Nie znaleziono pasującego utworu."
-},
-404
-);
-
-}
-
-
-m.sort(
-(a,b)=>
-b.match_score-a.match_score
-);
-
-
-/*
-Zwracamy do 10 najlepszych.
-Frontend wybiera losowo spośród
-najlepszych wyników.
-*/
-
-return cors(
-{
-ok:true,
-checked,
-results:
-m.slice(0,10)
-}
-);
-
-
-}
-
-catch(e){
-
-return cors(
-{
-ok:false,
-error:
-String(
-e.message||e
-)
-},
-500
-);
-
-}
-
-}
-
+export default {
+  async fetch(req) {
+    if (req.method === "OPTIONS") return cors({}, 204);
+
+    const u = new URL(req.url);
+
+    if (u.pathname === "/health") {
+      return cors({ ok: true, version: "diagnostic-2" });
+    }
+
+    if (u.pathname === "/debug") {
+      const id = u.searchParams.get("id");
+
+      if (!id || !/^[0-9a-f-]{36}$/i.test(id)) {
+        return cors({ ok: false, error: "Podaj prawidłowe ID UUID." }, 400);
+      }
+
+      try {
+        const r = await fetch(
+          "https://studio-api.prod.suno.com/api/clip/" + id,
+          {
+            headers: { "user-agent": "Mozilla/5.0" },
+            cf: { cacheTtl: 3600, cacheEverything: true }
+          }
+        );
+
+        const body = await r.text();
+        let api;
+
+        try {
+          api = JSON.parse(body);
+        } catch {
+          api = { raw: body };
+        }
+
+        return cors({
+          ok: r.ok,
+          http_status: r.status,
+          id,
+          api
+        }, r.ok ? 200 : 502);
+      } catch (e) {
+        return cors({ ok: false, error: String(e.message || e) }, 500);
+      }
+    }
+
+    if (u.pathname === "/stats") {
+      try {
+        const a = await ids();
+        return cors({
+          ok: true,
+          dataset_ids: a.length,
+          message: "Lista ID została pobrana."
+        });
+      } catch (e) {
+        return cors({ ok: false, error: String(e.message || e) }, 500);
+      }
+    }
+
+    if (u.pathname !== "/random") {
+      return cors({ ok: false, error: "Not found" }, 404);
+    }
+
+    try {
+      const wanted = u.searchParams.get("model") || "both";
+
+      const n = Math.min(
+        Math.max(+u.searchParams.get("tries") || 20, 1),
+        20
+      );
+
+      const st = terms(u.searchParams.get("style"));
+      const ex = terms(u.searchParams.get("exclude"));
+
+      const mode = u.searchParams.get("match") === "any" ? "any" : "all";
+
+      const em = ["normal", "boost", "only"].includes(
+        u.searchParams.get("experimental")
+      ) ? u.searchParams.get("experimental") : "normal";
+
+      const a = await ids();
+
+      const sample = [];
+      const seen = new Set();
+
+      while (sample.length < Math.min(n, a.length)) {
+        const id = a[Math.floor(Math.random() * a.length)];
+        if (!seen.has(id)) {
+          seen.add(id);
+          sample.push(id);
+        }
+      }
+
+      const m = [];
+      const stats = {
+        sampled: sample.length,
+        complete: 0,
+        incomplete: 0,
+        model_missing: 0,
+        model_mismatch: 0,
+        matched: 0
+      };
+
+      for (let i = 0; i < sample.length; i += 5) {
+        const batch = await Promise.all(
+          sample.slice(i, i + 5).map(clip)
+        );
+
+        for (const item of batch) {
+          if (!item.ok) {
+            if (item.reason === "not_complete") stats.incomplete++;
+            continue;
+          }
+
+          stats.complete++;
+
+          const d = item.data;
+
+          if (!d.model_version) {
+            stats.model_missing++;
+            continue;
+          }
+
+          if (!ver(d.model_version, wanted)) {
+            stats.model_mismatch++;
+            continue;
+          }
+
+          const x = score(d, st, ex, mode, em);
+
+          if (x) {
+            m.push(x);
+            stats.matched++;
+          }
+        }
+      }
+
+      if (!m.length) {
+        return cors({
+          ok: false,
+          checked: sample.length,
+          stats,
+          error: "Nie znaleziono pasującego utworu."
+        }, 404);
+      }
+
+      m.sort((a, b) => b.match_score - a.match_score);
+
+      return cors({
+        ok: true,
+        checked: sample.length,
+        stats,
+        results: m.slice(0, 10)
+      });
+    } catch (e) {
+      return cors({
+        ok: false,
+        error: String(e.message || e)
+      }, 500);
+    }
+  }
 };
