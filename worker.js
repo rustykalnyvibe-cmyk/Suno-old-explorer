@@ -5,13 +5,71 @@ function norm(s){return String(s||"").toLowerCase().normalize("NFKD").replace(/[
 function terms(s){return String(s||"").split(",").map(norm).filter(Boolean).slice(0,8)}
 function ver(v,w){let x=norm(v);return w==="v3"?(x==="v3"||x==="v3-all"):w==="v3.5"?x.includes("3.5"):w==="v3both"?(x==="v3"||x==="v3-all"||x.includes("3.5")):w==="v4"?x.startsWith("v4")&&!x.includes("4.5"):w==="v4.5"?x.includes("4.5"):x.startsWith("v4")}
 function expscore(h){return EXP.reduce((n,t)=>n+(h.includes(norm(t))?1:0),0)}
-function score(d,st,ex,mode,em){let h=norm((d.tags||"")+" "+(d.title||""));if(ex.some(x=>h.includes(x)))return null;let hits=st.filter(x=>h.includes(x)).length;if(st.length&&!h.includes(st[0]))return null;if(st.length&&mode==="all"&&hits<st.length)return null;if(st.length&&mode==="any"&&hits<1)return null;let e=expscore(h);if(em==="only"&&!e)return null;let s=hits*100+e*10+(st.length&&h.includes(st[0])?30:0);if(em==="boost")s+=e*25;return {...d,match_score:s,experimental_hits:e}}
-async function ids(){let c=await caches.default.match(new Request("https://cache.local/suno-ids"));if(c)return c.json();let r=await fetch(DATASET,{cf:{cacheTtl:86400}});if(!r.ok)throw Error("Nie można pobrać listy ID.");let a=[...new Set([... (await r.text()).matchAll(/https:\/\/cdn1\.suno\.ai\/([0-9a-f-]{36})\.mp3/gi)].map(m=>m[1]))];if(!a.length)throw Error("Lista ID jest pusta.");let z=new Response(JSON.stringify(a),{headers:{"content-type":"application/json"}});await caches.default.put(new Request("https://cache.local/suno-ids"),z.clone());return a}
-async function clip(id){let r=await fetch("https://studio-api.prod.suno.com/api/clip/"+id,{headers:{"user-agent":"Mozilla/5.0"},cf:{cacheTtl:3600,cacheEverything:true}});if(!r.ok)return null;let d=await r.json();if(d.status!=="complete"||!d.major_model_version)return null;return{id:d.id||id,model_version:d.major_model_version,title:d.title||d.metadata?.title||"",handle:d.handle||d.metadata?.handle||"",display_name:d.display_name||d.metadata?.display_name||"",tags:d.metadata?.tags||d.tags||"",created_at:d.created_at||"",audio_url:d.audio_url||""}}
-export default{async fetch(req){if(req.method==="OPTIONS")return cors({},204);let u=new URL(req.url);if(u.pathname==="/health")return cors({ok:true});if(u.pathname!=="/random")return cors({ok:false,error:"Not found"},404);try{
-let wanted=u.searchParams.get("model")||"both",n=Math.min(Math.max(+u.searchParams.get("tries")||40,1),100),st=terms(u.searchParams.get("style")),ex=terms(u.searchParams.get("exclude")),mode=u.searchParams.get("match")==="any"?"any":"all",em=["normal","boost","only"].includes(u.searchParams.get("experimental"))?u.searchParams.get("experimental"):"normal",a=await ids(),sample=[],seen=new Set();
-while(sample.length<Math.min(n,a.length)){let id=a[Math.floor(Math.random()*a.length)];if(!seen.has(id)){seen.add(id);sample.push(id)}}
-let m=[],checked=0;for(let i=0;i<sample.length;i+=5){let b=await Promise.all(sample.slice(i,i+5).map(clip));checked+=b.length;for(let d of b){if(d&&ver(d.model_version,wanted)){let x=score(d,st,ex,mode,em);if(x)m.push(x)}}}
-if(!m.length)return cors({ok:false,checked,error:st.length?"Nie znaleziono utworu spełniającego warunki. Zwiększ liczbę prób albo poluzuj filtr.":"Nie znaleziono pasującego utworu."},404);
-m.sort((a,b)=>b.match_score-a.match_score);let top=m[0].match_score,p=m.filter(x=>x.match_score===top),pick=p[Math.floor(Math.random()*p.length)];return cors({ok:true,checked,...pick});
-}catch(e){return cors({ok:false,error:String(e.message||e)},500)}}};
+function score(d,st,ex,mode,em){
+  let h=norm((d.tags||"")+" "+(d.title||""));
+  if(ex.some(x=>h.includes(x)))return null;
+  let hits=st.filter(x=>h.includes(x)).length;
+  if(st.length&&!h.includes(st[0]))return null;
+  if(st.length&&mode==="all"&&hits<st.length)return null;
+  if(st.length&&mode==="any"&&hits<1)return null;
+  let e=expscore(h);
+  if(em==="only"&&!e)return null;
+  let s=hits*100+e*10+(st.length&&h.includes(st[0])?30:0);
+  if(em==="boost")s+=e*25;
+  return {...d,match_score:s,experimental_hits:e};
+}
+async function ids(){
+  let c=await caches.default.match(new Request("https://cache.local/suno-ids"));
+  if(c)return c.json();
+  let r=await fetch(DATASET,{cf:{cacheTtl:86400}});
+  if(!r.ok)throw Error("Nie można pobrać listy ID.");
+  let a=[...new Set([...(await r.text()).matchAll(/https:\/\/cdn1\.suno\.ai\/([0-9a-f-]{36})\.mp3/gi)].map(m=>m[1]))];
+  if(!a.length)throw Error("Lista ID jest pusta.");
+  let z=new Response(JSON.stringify(a),{headers:{"content-type":"application/json"}});
+  await caches.default.put(new Request("https://cache.local/suno-ids"),z.clone());
+  return a;
+}
+async function clip(id){
+  let r=await fetch("https://studio-api.prod.suno.com/api/clip/"+id,{headers:{"user-agent":"Mozilla/5.0"},cf:{cacheTtl:3600,cacheEverything:true}});
+  if(!r.ok)return null;
+  let d=await r.json();
+  if(d.status!=="complete"||!d.major_model_version)return null;
+  return{id:d.id||id,model_version:d.major_model_version,title:d.title||d.metadata?.title||"",handle:d.handle||d.metadata?.handle||"",display_name:d.display_name||d.metadata?.display_name||"",tags:d.metadata?.tags||d.tags||"",created_at:d.created_at||"",audio_url:d.audio_url||""};
+}
+export default{async fetch(req){
+  if(req.method==="OPTIONS")return cors({},204);
+  let u=new URL(req.url);
+  if(u.pathname==="/health")return cors({ok:true});
+  if(u.pathname!=="/random")return cors({ok:false,error:"Not found"},404);
+  try{
+    let wanted=u.searchParams.get("model")||"both",
+        n=Math.min(Math.max(+u.searchParams.get("tries")||20,1),20),
+        st=terms(u.searchParams.get("style")),
+        ex=terms(u.searchParams.get("exclude")),
+        mode=u.searchParams.get("match")==="any"?"any":"all",
+        em=["normal","boost","only"].includes(u.searchParams.get("experimental"))?u.searchParams.get("experimental"):"normal",
+        a=await ids(),sample=[],seen=new Set();
+
+    while(sample.length<Math.min(n,a.length)){
+      let id=a[Math.floor(Math.random()*a.length)];
+      if(!seen.has(id)){seen.add(id);sample.push(id)}
+    }
+
+    let m=[],checked=0;
+    for(let i=0;i<sample.length;i+=5){
+      let b=await Promise.all(sample.slice(i,i+5).map(clip));
+      checked+=b.length;
+      for(let d of b){
+        if(d&&ver(d.model_version,wanted)){
+          let x=score(d,st,ex,mode,em);
+          if(x)m.push(x);
+        }
+      }
+    }
+
+    if(!m.length)return cors({ok:false,checked,error:st.length?"Nie znaleziono utworu spełniającego warunki. Zwiększ liczbę prób albo poluzuj filtr.":"Nie znaleziono pasującego utworu."},404);
+
+    m.sort((a,b)=>b.match_score-a.match_score);
+    return cors({ok:true,checked,results:m.slice(0,10)});
+  }catch(e){return cors({ok:false,error:String(e.message||e)},500)}
+}};

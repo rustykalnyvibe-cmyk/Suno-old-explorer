@@ -1,29 +1,109 @@
-<!doctype html><html lang="pl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Suno Old Explorer</title>
-<style>:root{color-scheme:dark}*{box-sizing:border-box}body{font-family:system-ui;background:#111;color:#eee;margin:0;padding:24px}main{max-width:760px;margin:auto}.card{background:#1b1b1b;border:1px solid #333;border-radius:18px;padding:20px;margin-top:18px}h1{margin:0 0 6px}p{color:#aaa}label,.section{display:block;color:#999;font-size:12px;margin:12px 0 6px;text-transform:uppercase}input,select,button{font:inherit;border-radius:12px;border:1px solid #555;background:#252525;color:#fff;padding:12px 14px}input{width:100%}button{cursor:pointer}.primary{width:100%;font-size:20px;margin:16px 0 10px}.row{display:flex;gap:10px;flex-wrap:wrap}.row>*{flex:1;min-width:160px}.chips{display:flex;flex-wrap:wrap;gap:7px}.chip{font-size:12px;padding:8px 10px}.small{font-size:12px;color:#888}.status{min-height:24px;color:#bbb}.badge{display:inline-block;padding:4px 9px;border-radius:999px;background:#333;margin:0 6px 6px 0}.title{font-size:23px;font-weight:700;margin-top:8px}.user{color:#aaa}.meta{margin-top:16px;line-height:1.5}a{color:#8ec5ff}</style></head><body><main>
-<h1>🎲 Suno Old Explorer</h1><p>Losowe publiczne utwory z dawnych generacji Suno — z filtrem stylu i eksperymentalnego DNA.</p>
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Suno Old Explorer</title>
+<style>
+:root{color-scheme:dark}*{box-sizing:border-box}body{font-family:system-ui;background:#111;color:#eee;margin:0;padding:24px}main{max-width:760px;margin:auto}.card{background:#1b1b1b;border:1px solid #333;border-radius:18px;padding:20px;margin-top:18px}h1{margin:0 0 6px}p{color:#aaa}label,.section{display:block;color:#999;font-size:12px;margin:12px 0 6px;text-transform:uppercase}input,select,button{font:inherit;border-radius:12px;border:1px solid #555;background:#252525;color:#fff;padding:12px 14px}input{width:100%}button{cursor:pointer}.primary{width:100%;font-size:20px;margin:16px 0 10px}.row{display:flex;gap:10px;flex-wrap:wrap}.row>*{flex:1;min-width:160px}.chips{display:flex;flex-wrap:wrap;gap:7px}.chip{font-size:12px;padding:8px 10px}.small{font-size:12px;color:#888}.status{min-height:24px;color:#bbb}.badge{display:inline-block;padding:4px 9px;border-radius:999px;background:#333;margin:0 6px 6px 0}.title{font-size:23px;font-weight:700;margin-top:8px}.user{color:#aaa}.meta{margin-top:16px;line-height:1.5}a{color:#8ec5ff}
+</style>
+</head>
+<body>
+<main>
+<h1>🎲 Suno Old Explorer</h1>
+<p>Losowe publiczne utwory z dawnych generacji Suno — z filtrem stylu i eksperymentalnego DNA.</p>
 <div class="card">
-<div class="row"><div><label>Wersja</label><select id="model"><option value="both">V4 + V4.5</option><option value="v4">Tylko V4</option><option value="v4.5">Tylko V4.5</option><option value="v3both">V3 + V3.5</option><option value="v3">Tylko V3</option><option value="v3.5">Tylko V3.5</option></select></div><div><label>Liczba prób</label><select id="tries"><option>20</option><option selected>40</option><option>70</option><option>100</option></select></div></div>
-<label>Styl / tagi — pierwszy termin jest głównym filtrem</label><input id="style" placeholder="np. trance, melodic, female vocal">
-<div class="section">Popularne style</div><div class="chips">
-<button class="chip" data-add="trance">TRANCE</button><button class="chip" data-add="rap">RAP</button><button class="chip" data-add="drum and bass">DnB</button><button class="chip" data-add="techno">TECHNO</button><button class="chip" data-add="house">HOUSE</button><button class="chip" data-add="ambient">AMBIENT</button><button class="chip" data-add="rock">ROCK</button><button class="chip" data-add="punk">PUNK</button><button class="chip" data-add="metal">METAL</button><button class="chip" data-add="jazz">JAZZ</button></div>
-<div class="section">Experimental DNA</div><div class="chips">
-<button class="chip" data-add="experimental">EXPERIMENTAL</button><button class="chip" data-add="turntablism">TURNtablism</button><button class="chip" data-add="avant-garde">AVANT-GARDE</button><button class="chip" data-add="abstract">ABSTRACT</button><button class="chip" data-add="weird">WEIRD</button><button class="chip" data-add="crazy">CRAZY</button><button class="chip" data-add="mystic">MYSTIC</button><button class="chip" data-add="psychedelic">PSYCHEDELIC</button><button class="chip" data-add="surreal">SURREAL</button><button class="chip" data-add="unconventional">UNCONVENTIONAL</button><button class="chip" data-add="glitch">GLITCH</button><button class="chip" data-add="idm">IDM</button><button class="chip" data-add="leftfield">LEFTFIELD</button><button class="chip" data-add="hybrid">HYBRID</button></div>
-<div class="section">History / kultowe tagi</div><div class="chips"><button class="chip" data-add="MAX MODE">⚡ MAX MODE</button><button class="chip" data-add="chaotic">CHAOTIC</button><button class="chip" data-add="freestyle">FREESTYLE</button></div>
-<label>Wyklucz</label><input id="exclude" placeholder="np. japanese, k-pop, anime">
-<div class="row"><div><label>Wymagania</label><select id="match"><option value="all">Wszystkie słowa</option><option value="any">Dowolne słowo</option></select></div><div><label>Eksperymentalność</label><select id="experimental"><option value="normal">Normalnie</option><option value="boost">Preferuj eksperymentalne</option><option value="only">Tylko eksperymentalne</option></select></div></div>
+<div class="row">
+<div><label>Wersja</label><select id="model">
+<option value="both">V4 + V4.5</option><option value="v4">Tylko V4</option><option value="v4.5">Tylko V4.5</option>
+<option value="v3both">V3 + V3.5</option><option value="v3">Tylko V3</option><option value="v3.5">Tylko V3.5</option>
+</select></div>
+<div><label>Liczba prób</label><select id="tries">
+<option>20</option><option selected>40</option><option>60</option>
+</select></div>
+</div>
+<label>Styl / tagi — pierwszy termin jest głównym filtrem</label>
+<input id="style" placeholder="np. trance, melodic, female vocal">
+<div class="section">Popularne style</div>
+<div class="chips">
+<button class="chip" data-add="trance">TRANCE</button><button class="chip" data-add="rap">RAP</button><button class="chip" data-add="drum and bass">DnB</button><button class="chip" data-add="techno">TECHNO</button><button class="chip" data-add="house">HOUSE</button><button class="chip" data-add="ambient">AMBIENT</button><button class="chip" data-add="rock">ROCK</button><button class="chip" data-add="punk">PUNK</button><button class="chip" data-add="metal">METAL</button><button class="chip" data-add="jazz">JAZZ</button>
+</div>
+<div class="section">Experimental DNA</div>
+<div class="chips">
+<button class="chip" data-add="experimental">EXPERIMENTAL</button><button class="chip" data-add="turntablism">TURNtablism</button><button class="chip" data-add="avant-garde">AVANT-GARDE</button><button class="chip" data-add="abstract">ABSTRACT</button><button class="chip" data-add="weird">WEIRD</button><button class="chip" data-add="crazy">CRAZY</button><button class="chip" data-add="mystic">MYSTIC</button><button class="chip" data-add="psychedelic">PSYCHEDELIC</button><button class="chip" data-add="surreal">SURREAL</button><button class="chip" data-add="unconventional">UNCONVENTIONAL</button><button class="chip" data-add="glitch">GLITCH</button><button class="chip" data-add="idm">IDM</button><button class="chip" data-add="leftfield">LEFTFIELD</button><button class="chip" data-add="hybrid">HYBRID</button>
+</div>
+<div class="section">History / kultowe tagi</div>
+<div class="chips"><button class="chip" data-add="MAX MODE">⚡ MAX MODE</button><button class="chip" data-add="chaotic">CHAOTIC</button><button class="chip" data-add="freestyle">FREESTYLE</button></div>
+<label>Wyklucz</label>
+<input id="exclude" placeholder="np. japanese, k-pop, anime">
+<div class="row">
+<div><label>Wymagania</label><select id="match"><option value="all">Wszystkie słowa</option><option value="any">Dowolne słowo</option></select></div>
+<div><label>Eksperymentalność</label><select id="experimental"><option value="normal">Normalnie</option><option value="boost">Preferuj eksperymentalne</option><option value="only">Tylko eksperymentalne</option></select></div>
+</div>
 <div class="small">„Preferuj” podbija eksperymentalne wyniki, ale nie wymaga takiego tagu. „Tylko” wymaga co najmniej jednego.</div>
-<button class="primary" id="random">🎲 LOSUJ UTWÓR</button><div class="status" id="status">Gotowe.</div></div>
-<div class="card" id="result" hidden><span class="badge" id="version"></span><span class="badge" id="date"></span><span class="badge" id="score"></span><div class="title" id="title"></div><div class="user" id="user"></div><div class="meta"><b>Tagi:</b> <span id="tags"></span></div><p class="small">ID: <span id="id"></span></p><div class="row"><a id="suno" target="_blank"><button>Otwórz w Suno ↗</button></a><a id="audio" target="_blank"><button>▶ Audio</button></a></div></div>
+<button class="primary" id="random">🎲 LOSUJ UTWÓR</button>
+<div class="status" id="status">Gotowe.</div>
+</div>
+<div class="card" id="result" hidden>
+<span class="badge" id="version"></span><span class="badge" id="date"></span><span class="badge" id="score"></span>
+<div class="title" id="title"></div><div class="user" id="user"></div>
+<div class="meta"><b>Tagi:</b> <span id="tags"></span></div>
+<p class="small">ID: <span id="id"></span></p>
+<div class="row"><a id="suno" target="_blank"><button>Otwórz w Suno ↗</button></a><a id="audio" target="_blank"><button>▶ Audio</button></a></div>
+</div>
 <div class="card small">Filtr działa na publicznych metadanych/tagach utworu; nie udaje analizy samego audio.</div>
-</main><script>
+</main>
+<script>
 const W="https://suno-old-explorer.rustykalnyvibe.workers.dev",$=x=>document.getElementById(x);
 function add(t){let a=$("style").value.split(",").map(x=>x.trim()).filter(Boolean);if(!a.map(x=>x.toLowerCase()).includes(t.toLowerCase()))a.push(t);$("style").value=a.join(", ")}
 document.querySelectorAll("[data-add]").forEach(b=>b.onclick=()=>add(b.dataset.add));
-$("random").onclick=async()=>{ $("random").disabled=true;$("result").hidden=true;$("status").textContent="Szukam…";try{
-let q=new URLSearchParams({model:$("model").value,tries:$("tries").value,style:$("style").value,exclude:$("exclude").value,match:$("match").value,experimental:$("experimental").value});
-let r=await fetch(W+"/random?"+q),d=await r.json();if(!r.ok||!d.ok)throw Error(d.error||"Brak wyniku");
-$("version").textContent=d.model_version||"";$("date").textContent=(d.created_at||"").slice(0,10);$("score").textContent="dopasowanie "+(d.match_score||0);
-$("title").textContent=d.title||"(bez tytułu)";$("user").textContent=d.handle?"@"+d.handle:(d.display_name||"");$("tags").textContent=d.tags||"(brak)";
-$("id").textContent=d.id;$("suno").href="https://suno.com/song/"+d.id;$("audio").href=d.audio_url||"#";$("result").hidden=false;$("status").textContent="Znaleziono. Sprawdzono "+d.checked+" kandydatów.";
-}catch(e){$("status").textContent="Błąd: "+e.message}finally{$("random").disabled=false}};
-</script></body></html>
+
+$("random").onclick=async()=>{
+  $("random").disabled=true;$("result").hidden=true;$("status").textContent="Szukam…";
+  try{
+    const total=Math.min(Math.max(+$("tries").value||40,1),60);
+    const chunk=20;
+    const rounds=Math.ceil(total/chunk);
+    let all=[],checked=0;
+
+    for(let i=0;i<rounds;i++){
+      const count=Math.min(chunk,total-i*chunk);
+      let q=new URLSearchParams({
+        model:$("model").value,tries:String(count),style:$("style").value,
+        exclude:$("exclude").value,match:$("match").value,experimental:$("experimental").value
+      });
+      $("status").textContent=`Szukam… tura ${i+1}/${rounds}`;
+      let r=await fetch(W+"/random?"+q),d=await r.json();
+      if(!r.ok||!d.ok){
+        if(d && d.checked) checked+=d.checked;
+        continue;
+      }
+      checked+=d.checked||0;
+      if(Array.isArray(d.results)) all.push(...d.results);
+      else all.push(d);
+    }
+
+    if(!all.length) throw Error("Nie znaleziono utworu spełniającego warunki. Zwiększ liczbę prób albo poluzuj filtr.");
+
+    all.sort((a,b)=>(b.match_score||0)-(a.match_score||0));
+    const topScore=all[0].match_score||0;
+    const pool=all.filter(x=>(x.match_score||0)===topScore);
+    const d=pool[Math.floor(Math.random()*pool.length)];
+
+    $("version").textContent=d.model_version||"";
+    $("date").textContent=(d.created_at||"").slice(0,10);
+    $("score").textContent="dopasowanie "+(d.match_score||0);
+    $("title").textContent=d.title||"(bez tytułu)";
+    $("user").textContent=d.handle?"@"+d.handle:(d.display_name||"");
+    $("tags").textContent=d.tags||"(brak)";
+    $("id").textContent=d.id;
+    $("suno").href="https://suno.com/song/"+d.id;
+    $("audio").href=d.audio_url||"#";
+    $("result").hidden=false;
+    $("status").textContent=`Znaleziono. Sprawdzono ${checked} kandydatów.`;
+  }catch(e){$("status").textContent="Błąd: "+e.message}
+  finally{$("random").disabled=false}
+};
+</script>
+</body>
+</html>
